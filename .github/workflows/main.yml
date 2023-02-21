@@ -5,7 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Vue
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.workflow_run.head_branch }}
     - id: Build-Vue
       uses: "./.github/workflows/action.yml"
       with:
