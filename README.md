@@ -1,4 +1,6 @@
-# essentials
+# CS6131 Project
+
+The below commands should be run in the `client` folder.
 
 ## Project setup
 

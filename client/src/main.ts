@@ -18,3 +18,10 @@ const app = createApp(App)
 registerPlugins(app)
 
 app.mount('#app')
+
+import { createPinia } from "pinia"
+import piniaPluginPersistedState from "pinia-plugin-persistedstate"
+
+const pinia = createPinia()
+
+pinia.use(piniaPluginPersistedState)
