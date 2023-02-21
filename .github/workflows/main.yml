@@ -10,7 +10,7 @@ jobs:
       with:
         ref: ${{ github.event.workflow_run.head_branch }}
     - id: Build-Vue
-      uses: "./.github/workflows/action.yml"
+      uses: "./.github/template/action.yml"
       with:
         username: 'jedlimlx'
         reponame: 'cs6131-project'
