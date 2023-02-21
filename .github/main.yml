@@ -1,0 +1,14 @@
+name: Build Vue
+on: [push]
+jobs:
+  build_vue:
+    runs-on: ubuntu-latest
+    name: Build Vue
+    steps:
+    - uses: actions/checkout@v2
+    - id: Build-Vue
+      uses: "./github/action.yml"
+      with:
+        username: 'jedlimlx'
+        reponame: 'cs6131-project'
+        token: ${{ secrets.GITHUB_TOKEN }} # Leave this line unchanged
