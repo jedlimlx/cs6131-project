@@ -7,6 +7,11 @@ const routes = [
         component: () => import('@/layouts/default/Default.vue'),
         children: [
             {
+                path: '/profile',
+                name: 'Profile',
+                component: () => import('@/views/Profile.vue'),
+            },
+            {
                 path: '/projects',
                 name: 'Projects',
                 component: () => import('@/views/Project.vue'),

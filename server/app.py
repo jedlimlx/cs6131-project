@@ -47,5 +47,26 @@ def login(username, password):
         )
 
 
+@app.route('/update_user/username=<string:username>&firstname=<string:firstname>&'
+           'lastname=<string:lastname>&email=<string:email>')
+def update_user(username, firstname, lastname, email):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""
+    UPDATE user 
+    SET email="{email}", firstname="{firstname}", lastname="{lastname}" 
+    WHERE username="{username}"
+    """)
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    return 0
+
+
 if __name__ == '__main__':
     app.run()

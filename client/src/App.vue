@@ -28,7 +28,7 @@
             <v-btn elevation=0 color="white" padding="4" @click="creatingNewAccount = true" v-if="!loggedIn">
                 New Account
             </v-btn>
-            <v-btn elevation=0 color="white" padding="4" @click="loggedIn = false" v-if="loggedIn">
+            <v-btn elevation=0 color="white" padding="4" @click="loggedIn = false; $router.push('/')" v-if="loggedIn">
                 Logout
             </v-btn>
         </v-app-bar>
@@ -193,6 +193,7 @@ import Feedback from "@/views/Feedback.vue"
 
 import { useUserStore } from "@/store/app"
 import { storeToRefs } from "pinia"
+import Profile from "@/views/Profile.vue";
 
 const vuetify = createVuetify({
     components,
@@ -225,6 +226,12 @@ const routes = [
         component: Home,
     },
     {
+        name: "Profile",
+        path: "/profile",
+        icon: "mdi-face-man-profile",
+        component: Profile,
+    },
+    {
         name: "Projects",
         path: "/projects",
         icon: "mdi-test-tube",
@@ -251,8 +258,6 @@ const login = async function() {
     if (success) {
         // do something
         // redirect to dashboard or something
-        console.log(username)
-        console.log(firstname+"")
     } else {
         loginError.value = true
     }

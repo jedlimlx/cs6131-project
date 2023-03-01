@@ -39,14 +39,14 @@
                 active-color="primary"
                 rounded
             >
-            <v-list-item-title v-text="ref" @click="selectedRef=index"></v-list-item-title>
+                <v-list-item-title @click="selectedRef=index" v-text="ref"></v-list-item-title>
             </v-list-item>
         </v-list>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-import { ref, Ref } from 'vue'
+import {ref, Ref} from 'vue'
 
 const selectedItem: Ref = ref(0)
 const selectedRef: Ref = ref(0)
