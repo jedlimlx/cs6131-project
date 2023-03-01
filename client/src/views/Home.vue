@@ -3,7 +3,7 @@
         <v-row class="fill-width">
             <v-col>
                 <div class="text-h1" v-if="userStore.loggedIn">
-                    Welcome, {{ $route.params.username }}!
+                    Welcome, {{ userStore.firstname }} {{ userStore.lastname }}!
                 </div>
 
                 <br>

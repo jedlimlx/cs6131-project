@@ -17,13 +17,8 @@ const routes = [
                 component: () => import('@/views/Feedback.vue'),
             },
             {
-                path: '/:username',
-                name: 'Home',
-                component: () => import('@/views/Home.vue'),
-            },
-            {
                 path: '/',
-                name: 'Not the same',
+                name: 'Home',
                 component: () => import('@/views/Home.vue'),
             }
         ],

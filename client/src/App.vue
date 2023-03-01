@@ -3,7 +3,7 @@
         <v-navigation-drawer v-model="drawerShown" temporary app>
             <v-list dense nav>
                 <v-list-item>
-                    <h2>Welcome, {{ $route.params.username }}!</h2>
+                    <h2>Welcome, {{ firstname }} {{ lastname }}!</h2>
                 </v-list-item>
                 <v-divider></v-divider>
                 <v-list-item v-for="item in routes" :to="item.path" @click="drawerShown = false"
@@ -152,6 +152,29 @@
                 </v-card>
             </v-dialog>
         </v-row>
+
+        <v-row justify="center">
+            <v-dialog
+                v-model="loginError"
+                persistent
+                max-width="290"
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        Error
+                    </v-card-title>
+                    <v-card-text>
+                        Either your username or password is wrong!
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" text @click="loginError = false">
+                            Ok
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-row>
     </v-app>
 </template>
 
@@ -164,39 +187,40 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-import Home from "@/views/Home.vue";
-import Project from "@/views/Project.vue";
-import Feedback from "@/views/Feedback.vue";
+import Home from "@/views/Home.vue"
+import Project from "@/views/Project.vue"
+import Feedback from "@/views/Feedback.vue"
 
-import { useUserStore } from "@/store/app";
-import { storeToRefs } from "pinia";
-import router from "@/router";
+import { useUserStore } from "@/store/app"
+import { storeToRefs } from "pinia"
 
 const vuetify = createVuetify({
     components,
     directives,
 })
 
-const userStore = useUserStore();
-const { loggedIn, username } = storeToRefs(userStore);
+const userStore = useUserStore()
+const { loggedIn, username, firstname, lastname, uid, email } = storeToRefs(userStore)
 
-const drawerShown: Ref<boolean> = ref(false);
+const drawerShown: Ref<boolean> = ref(false)
 
-const loggingIn: Ref<boolean> = ref(false);
-const creatingNewAccount: Ref<boolean> = ref(false);
+const loggingIn: Ref<boolean> = ref(false)
+const creatingNewAccount: Ref<boolean> = ref(false)
 
-const alertShown: Ref<boolean> = ref(false);
+const alertShown: Ref<boolean> = ref(false)
 
-const show1: Ref<boolean> = ref(false);
-const show2: Ref<boolean> = ref(false);
-const show3: Ref<boolean> = ref(false);
+const show1: Ref<boolean> = ref(false)
+const show2: Ref<boolean> = ref(false)
+const show3: Ref<boolean> = ref(false)
 
-const password: Ref<string> = ref("");
+const password: Ref<string> = ref("")
+
+const loginError: Ref<boolean> = ref(false)
 
 const routes = [
     {
         name: "Home",
-        path: "/"+username.value,
+        path: "/",
         icon: "mdi-file-table-box",
         component: Home,
     },
@@ -215,15 +239,22 @@ const routes = [
 ]
 
 const clear = function() {
-    username.value = "";
-    password.value = "";
-    show1.value = false;
-    show2.value = false;
-    show3.value = false;
+    username.value = ""
+    password.value = ""
+    show1.value = false
+    show2.value = false
+    show3.value = false
 }
 
-const login = function() {
-    userStore.login(username.value);
-    router.push('/'+username.value);
+const login = async function() {
+    let success = await userStore.login(username.value, password.value)
+    if (success) {
+        // do something
+        // redirect to dashboard or something
+        console.log(username)
+        console.log(firstname+"")
+    } else {
+        loginError.value = true
+    }
 }
 </script>
