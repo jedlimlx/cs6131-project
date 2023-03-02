@@ -194,6 +194,7 @@ import Feedback from "@/views/Feedback.vue"
 import { useUserStore } from "@/store/app"
 import { storeToRefs } from "pinia"
 import Profile from "@/views/Profile.vue";
+import References from "@/views/References.vue";
 
 const vuetify = createVuetify({
     components,
@@ -230,6 +231,12 @@ const routes = [
         path: "/profile",
         icon: "mdi-face-man-profile",
         component: Profile,
+    },
+    {
+        name: "References",
+        path: "/references",
+        icon: "mdi-book",
+        component: References,
     },
     {
         name: "Projects",

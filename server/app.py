@@ -1,3 +1,4 @@
+import urllib.parse
 from flask import Flask, jsonify
 from flask_mysqldb import MySQL
 from flask_cors import CORS
@@ -47,16 +48,16 @@ def login(username, password):
         )
 
 
-@app.route('/update_user/username=<string:username>&firstname=<string:firstname>&'
+@app.route('/update_user/uid=<int:uid>&firstname=<string:firstname>&'
            'lastname=<string:lastname>&email=<string:email>')
-def update_user(username, firstname, lastname, email):
+def update_user(uid, firstname, lastname, email):
     cursor = mysql.connection.cursor()
 
     # Executing SQL Statements
     cursor.execute(f"""
     UPDATE user 
     SET email="{email}", firstname="{firstname}", lastname="{lastname}" 
-    WHERE username="{username}"
+    WHERE uid={uid}
     """)
 
     # Saving the actions performed on the DB
@@ -65,7 +66,112 @@ def update_user(username, firstname, lastname, email):
     # Closing the cursor
     cursor.close()
 
-    return 0
+    return ""
+
+
+@app.route('/reference/doi=<string:doi>')
+def get_reference(doi):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    doi = doi.replace("$", "%").replace("\"", "")
+    doi = urllib.parse.unquote(doi)
+    cursor.execute(f"""SELECT * FROM reference WHERE doi="{doi}" """)
+    data = cursor.fetchone()
+
+    if data:
+        json = {
+            "status": 1,
+            "doi": data[0],
+            "title": data[1],
+            "type": data[2]
+        }
+
+        cursor.execute(f"""SELECT * FROM authors WHERE doi="{doi}" """)
+        data = cursor.fetchall()
+        json["authors"] = [x[1] for x in data]
+
+        reference_type = json["type"]
+        if reference_type == 0:  # journal
+            cursor.execute(f"""SELECT * FROM journalArticle WHERE doi="{doi}" """)
+            data = cursor.fetchone()
+            json["pname"] = data[1]
+            json["minPage"] = data[2]
+            json["maxPage"] = data[3]
+            json["number"] = data[4]
+            json["volume"] = data[5]
+            json["date"] = data[6]
+        elif reference_type == 1:  # conference
+            cursor.execute(f"""SELECT * FROM conferenceArticle WHERE doi="{doi}" """)
+            data = cursor.fetchone()
+            json["pname"] = data[1]
+            json["year"] = data[2]
+        elif reference_type == 2:  # book
+            cursor.execute(f"""SELECT * FROM book WHERE doi="{doi}" """)
+            data = cursor.fetchone()
+            json["minPage"] = data[1]
+            json["maxPage"] = data[2]
+            json["isbn"] = data[3]
+        elif reference_type == 3:  # website
+            cursor.execute(f"""SELECT * FROM website WHERE doi="{doi}" """)
+            data = cursor.fetchone()
+            json["dateAccessed"] = data[1]
+
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify(json)
+    else:
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify(
+            {
+                "status": 0
+            }
+        )
+
+
+@app.route('/references/uid=<int:uid>')
+def get_references_1(uid):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""SELECT * FROM isRead WHERE uid={uid} """)
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    lst = []
+    for i in data:
+        lst.append(get_reference(i[0]).json)
+
+    return jsonify(lst)
+
+
+@app.route('/references/pid=<int:pid>')
+def get_references_2(pid):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""SELECT * FROM cited WHERE pid={pid} """)
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    lst = []
+    for i in data:
+        lst.append(get_reference(i[0]).json)
+
+    return jsonify(lst)
 
 
 if __name__ == '__main__':

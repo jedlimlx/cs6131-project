@@ -50,7 +50,7 @@ const editing: Ref<boolean> = ref(false);
 const updateDatabase = function() {
     fetch(
         SERVER+
-        "/update_user/username="+userStore.username+
+        "/update_user/uid="+userStore.uid+
         "&firstname="+userStore.firstname+
         "&lastname="+userStore.lastname+
         "&email="+userStore.email
