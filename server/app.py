@@ -69,6 +69,45 @@ def update_user(uid, firstname, lastname, email):
     return ""
 
 
+@app.route('/change_password/uid=<int:uid>&password=<string:password>&'
+           'new_password=<string:new_password>')
+def change_password(uid, password, new_password):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""
+    SELECT *
+    FROM user 
+    WHERE uid={uid}
+    """)
+    data = cursor.fetchone()
+
+    if data and data[3] == password:
+        cursor.execute(f"""
+        UPDATE user
+        SET password="{new_password}"
+        WHERE uid={uid}
+        """)
+
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify(
+            {
+                "status": 1
+            }
+        )
+    else:
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify(
+            {
+                "status": 0
+            }
+        )
+
+
 @app.route('/reference/doi=<string:doi>')
 def get_reference(doi):
     cursor = mysql.connection.cursor()
