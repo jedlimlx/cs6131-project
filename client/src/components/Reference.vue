@@ -1,8 +1,18 @@
 <template>
     <v-card
-        :href="'https://doi.org/' + reference.doi"
+        @click="selected=!selected"
+        :color="selected ? 'primary' : 'white'"
+        :title="reference.title"
     >
-        <v-card-title>{{ reference.title }}</v-card-title>
+        <template v-slot:append>
+            <v-btn
+                :href="'https://doi.org/'+reference.doi"
+                icon="mdi-link"
+                elevation="0"
+                color="transparent"
+                @click="selected=!selected"
+            ></v-btn>
+        </template>
         <v-card-subtitle>{{ reference.authors.join(", ") }}</v-card-subtitle>
         <v-card-text v-if="reference.type === 0">Published in {{ reference.pname }} on {{ reference.date }}</v-card-text>
         <v-card-text v-if="reference.type === 1">Published at {{ reference.pname }} {{ reference.year }}</v-card-text>
@@ -12,6 +22,6 @@
 
 <script lang="ts">
 export default {
-    props: [ "reference" ]
+    props: [ "reference", "selected" ]
 }
 </script>

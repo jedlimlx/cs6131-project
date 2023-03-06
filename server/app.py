@@ -171,6 +171,27 @@ def get_reference(doi):
         )
 
 
+@app.route('/search_reference/q=<string:query>')
+def search_reference(query):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""SELECT doi FROM reference WHERE title LIKE "%{query}%" """)
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    lst = []
+    for doi in data:
+        lst.append(get_reference(doi[0]).json)
+
+    return jsonify(lst)
+
+
 @app.route('/references/uid=<int:uid>')
 def get_references_1(uid):
     cursor = mysql.connection.cursor()
@@ -211,6 +232,38 @@ def get_references_2(pid):
         lst.append(get_reference(i[0]).json)
 
     return jsonify(lst)
+
+
+@app.route('/add_reference/doi=<string:doi>&uid=<int:uid>&read=<int:read>')
+def add_reference(doi, uid, read):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    doi = doi.replace("$", "%").replace("\"", "")
+    doi = urllib.parse.unquote(doi)
+    cursor.execute(f"""INSERT INTO isRead VALUES ("{doi}", {uid}, {read}) """)
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+
+@app.route('/add_reference/doi=<string:doi>&pid=<int:pid>')
+def add_reference_2(doi, pid):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    doi = doi.replace("$", "%").replace("\"", "")
+    doi = urllib.parse.unquote(doi)
+    cursor.execute(f"""INSERT INTO cited VALUES ("{doi}", {pid}) """)
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
 
 
 if __name__ == '__main__':
