@@ -26,4 +26,4 @@ const pinia = createPinia()
 
 pinia.use(piniaPluginPersistedState)
 
-export const SERVER = "https://fbc1-58-182-4-75.ap.ngrok.io"
+export const SERVER = "http://localhost:5000"

@@ -22,6 +22,11 @@
 
 <script lang="ts">
 export default {
-    props: [ "reference", "selected" ]
+    props: [ "reference" ],
+    data() {
+        return {
+            selected: false
+        }
+    }
 }
 </script>
