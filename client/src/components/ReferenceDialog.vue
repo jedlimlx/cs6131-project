@@ -51,7 +51,12 @@
                             :title="item.title"
                             class="pr-5 pl-5"
                         >
-                            <Reference :reference="item" class="pa-2"></Reference>
+                            <Reference
+                                :reference="item"
+                                :selected="item.selected"
+                                @toggle="item.selected = !item.selected"
+                                class="pa-2"
+                            ></Reference>
                         </v-list>
                     </v-window-item>
                 </v-window>
@@ -62,7 +67,7 @@
                     Cancel
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" text @click="show = false; console.log(show)">
+                <v-btn color="primary" text @click="show = false; $emit('addReference')">
                     Add
                 </v-btn>
             </v-card-actions>
@@ -78,6 +83,7 @@ import Reference from "@/components/Reference.vue";
 export default {
     components: { Reference },
     props: [ ],
+    emits: [ "addReference" ],
     data() {
         return {
             show: false,
@@ -90,6 +96,9 @@ export default {
     methods: {
         async f(keyword) {
             this.references = await (await fetch(SERVER + "/search_reference/q=" + keyword)).json()
+            for (const item of this.references) {
+                item.selected = false
+            }
         }
     }
 }

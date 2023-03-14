@@ -1,6 +1,6 @@
 <template>
     <v-card
-        @click="selected=!selected"
+        @click="$emit('toggle')"
         :color="selected ? 'primary' : 'white'"
         :title="reference.title"
     >
@@ -10,7 +10,7 @@
                 icon="mdi-link"
                 elevation="0"
                 color="transparent"
-                @click="selected=!selected"
+                @click="$emit('toggle')"
             ></v-btn>
         </template>
         <v-card-subtitle>{{ reference.authors.join(", ") }}</v-card-subtitle>
@@ -22,11 +22,7 @@
 
 <script lang="ts">
 export default {
-    props: [ "reference" ],
-    data() {
-        return {
-            selected: false
-        }
-    }
+    props: [ "reference", "selected" ],
+    emits: [ "toggle" ]
 }
 </script>

@@ -3,6 +3,10 @@ from flask import Flask, jsonify
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 
+from arvix import scrape_arxiv
+from apl import scrape_apl
+from nature import scrape_nature
+
 
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
@@ -234,36 +238,76 @@ def get_references_2(pid):
     return jsonify(lst)
 
 
+def check_doi(doi, cursor):
+    cursor.execute(f"""SELECT doi FROM reference WHERE doi="{doi}" """)
+    if len(cursor.fetchall()) == 0:
+        if "arxiv" in doi:  # arxiv
+            command = scrape_arxiv(doi)
+        elif "10.1063" in doi:  # apl
+            command = scrape_apl(doi)
+        elif "10.1038" in doi:  # nature
+            command = scrape_nature(doi)
+        else:
+            raise Exception("Unsupported DOI")
+
+        for c in command.split(";")[:-1]:
+            cursor.execute(c)
+
+        mysql.connection.commit()
+
+
 @app.route('/add_reference/doi=<string:doi>&uid=<int:uid>&read=<int:read>')
 def add_reference(doi, uid, read):
-    cursor = mysql.connection.cursor()
+    try:
+        cursor = mysql.connection.cursor()
 
-    # Executing SQL Statements
-    doi = doi.replace("$", "%").replace("\"", "")
-    doi = urllib.parse.unquote(doi)
-    cursor.execute(f"""INSERT INTO isRead VALUES ("{doi}", {uid}, {read}) """)
+        # Executing SQL Statements
+        doi = doi.replace("$", "%").replace("\"", "")
+        doi = urllib.parse.unquote(doi)
+        check_doi(doi, cursor)
+        cursor.execute(f"""INSERT INTO isRead VALUES ("{doi}", {uid}, {read}) """)
 
-    # Saving the actions performed on the DB
-    mysql.connection.commit()
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
 
-    # Closing the cursor
-    cursor.close()
+        # Closing the cursor
+        cursor.close()
+
+        return jsonify({
+            "status": 1
+        })
+    except Exception as e:
+        return jsonify({
+            "status": 0,
+            "error": str(e)
+        })
 
 
 @app.route('/add_reference/doi=<string:doi>&pid=<int:pid>')
 def add_reference_2(doi, pid):
-    cursor = mysql.connection.cursor()
+    try:
+        cursor = mysql.connection.cursor()
 
-    # Executing SQL Statements
-    doi = doi.replace("$", "%").replace("\"", "")
-    doi = urllib.parse.unquote(doi)
-    cursor.execute(f"""INSERT INTO cited VALUES ("{doi}", {pid}) """)
+        # Executing SQL Statements
+        doi = doi.replace("$", "%").replace("\"", "")
+        doi = urllib.parse.unquote(doi)
+        check_doi(doi, cursor)
+        cursor.execute(f"""INSERT INTO cited VALUES ("{doi}", {pid}) """)
 
-    # Saving the actions performed on the DB
-    mysql.connection.commit()
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
 
-    # Closing the cursor
-    cursor.close()
+        # Closing the cursor
+        cursor.close()
+
+        return jsonify({
+            "status": 1
+        })
+    except Exception as e:
+        return jsonify({
+            "status": 0,
+            "error": str(e)
+        })
 
 
 if __name__ == '__main__':
