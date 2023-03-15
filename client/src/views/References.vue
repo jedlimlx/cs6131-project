@@ -22,9 +22,12 @@
             subtitle="..."
         >
             <Reference
+                :read="item"
                 :reference="item"
                 :selected="item.selected"
+                @toggleRead="item.read = !item.read; toggleRead(item)"
                 @toggle="item.selected = !item.selected"
+                @delete="deleteReference(item)"
             ></Reference>
         </v-list>
 
@@ -103,6 +106,9 @@ const addReference = async function() {
         error.value = data.error
         errorDialog.value = true
     }
+
+    // Reload the references
+    await loadReference()
 }
 
 const search = function (keyword: string) {
@@ -118,6 +124,18 @@ const search = function (keyword: string) {
         // @ts-ignore
         item.selected = false
     }
+}
+
+const toggleRead = function(item: object) {
+    //@ts-ignore
+    fetch(SERVER + "/update_read/doi=\""+item.doi.replace("/", "$2F")+"&uid="+userStore.uid+"&read="+(0+item.read))
+}
+
+
+const deleteReference = function(item: object) {
+    //@ts-ignore
+    fetch(SERVER + "/delete_reference/doi=\""+item.doi.replace("/", "$2F")+"&uid="+userStore.uid)
+    references.value = references.value.filter(i => i !== item)
 }
 
 onMounted(() => {

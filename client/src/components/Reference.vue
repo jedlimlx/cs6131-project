@@ -6,6 +6,24 @@
     >
         <template v-slot:append>
             <v-btn
+                icon="mdi-trash-can"
+                elevation="0"
+                color="transparent"
+                @click="$emit('delete'); $emit('toggle')"
+            ></v-btn>
+            <v-btn
+                icon="mdi-asdasd"
+                v-if="read"
+                elevation="0"
+                color="transparent"
+                @click="$emit('toggleRead'); $emit('toggle')"
+            >
+                <v-icon
+                    :color="reference.read ? (selected ? 'green-lighten-1' : 'green-darken-1'): (selected ? 'white' : 'black')"
+                    :icon="reference.read ? 'mdi-book-check' : 'mdi-book'"
+                ></v-icon>
+            </v-btn>
+            <v-btn
                 :href="'https://doi.org/'+reference.doi"
                 icon="mdi-link"
                 elevation="0"
@@ -22,7 +40,7 @@
 
 <script lang="ts">
 export default {
-    props: [ "reference", "selected" ],
+    props: [ "reference", "selected", "read" ],
     emits: [ "toggle" ]
 }
 </script>

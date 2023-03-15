@@ -67,7 +67,7 @@
                     Cancel
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" text @click="show = false; $emit('addReference')">
+                <v-btn color="primary" text @click="show = false; addReference()">
                     Add
                 </v-btn>
             </v-card-actions>
@@ -99,6 +99,16 @@ export default {
             for (const item of this.references) {
                 item.selected = false
             }
+        },
+        addReference() {
+            for (const item of this.references) {
+                if (item.selected) {
+                    this.doi = item.doi
+                    this.$emit("addReference")
+                }
+            }
+
+            this.doi = ""
         }
     }
 }

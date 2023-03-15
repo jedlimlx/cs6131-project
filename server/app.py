@@ -18,6 +18,7 @@ CORS(app)
 mysql = MySQL(app)
 
 
+# Account Management
 @app.route('/login/username=<string:username>&password=<string:password>')
 def login(username, password):
     cursor = mysql.connection.cursor()
@@ -112,6 +113,7 @@ def change_password(uid, password, new_password):
         )
 
 
+# Getting References
 @app.route('/reference/doi=<string:doi>')
 def get_reference(doi):
     cursor = mysql.connection.cursor()
@@ -213,6 +215,7 @@ def get_references_1(uid):
     lst = []
     for i in data:
         lst.append(get_reference(i[0]).json)
+        lst[-1]["read"] = i[-1]
 
     return jsonify(lst)
 
@@ -238,6 +241,7 @@ def get_references_2(pid):
     return jsonify(lst)
 
 
+# Adding References
 def check_doi(doi, cursor):
     cursor.execute(f"""SELECT doi FROM reference WHERE doi="{doi}" """)
     if len(cursor.fetchall()) == 0:
@@ -293,6 +297,85 @@ def add_reference_2(doi, pid):
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
         cursor.execute(f"""INSERT INTO cited VALUES ("{doi}", {pid}) """)
+
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
+
+        # Closing the cursor
+        cursor.close()
+
+        return jsonify({
+            "status": 1
+        })
+    except Exception as e:
+        return jsonify({
+            "status": 0,
+            "error": str(e)
+        })
+
+
+# Updating References
+@app.route('/update_read/doi=<string:doi>&uid=<int:uid>&read=<int:read>')
+def update_read(uid, doi, read):
+    try:
+        cursor = mysql.connection.cursor()
+
+        doi = doi.replace("$", "%").replace("\"", "")
+        doi = urllib.parse.unquote(doi)
+        check_doi(doi, cursor)
+        cursor.execute(f"""UPDATE isRead SET hasRead={read} WHERE doi="{doi}" AND uid = {uid}; """)
+
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
+
+        # Closing the cursor
+        cursor.close()
+
+        return jsonify({
+            "status": 1
+        })
+    except Exception as e:
+        return jsonify({
+            "status": 0,
+            "error": str(e)
+        })
+
+
+@app.route('/delete_reference/doi=<string:doi>&uid=<int:uid>')
+def delete_reference_1(doi, uid):
+    try:
+        cursor = mysql.connection.cursor()
+
+        doi = doi.replace("$", "%").replace("\"", "")
+        doi = urllib.parse.unquote(doi)
+        check_doi(doi, cursor)
+        cursor.execute(f"""DELETE FROM isRead WHERE doi="{doi}" AND uid = {uid}; """)
+
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
+
+        # Closing the cursor
+        cursor.close()
+
+        return jsonify({
+            "status": 1
+        })
+    except Exception as e:
+        return jsonify({
+            "status": 0,
+            "error": str(e)
+        })
+
+
+@app.route('/delete_reference/doi=<string:doi>&pid=<int:pid>')
+def delete_reference_2(doi, pid):
+    try:
+        cursor = mysql.connection.cursor()
+
+        doi = doi.replace("$", "%").replace("\"", "")
+        doi = urllib.parse.unquote(doi)
+        check_doi(doi, cursor)
+        cursor.execute(f"""DELETE FROM isRead WHERE doi="{doi}" AND pid = {pid}; """)
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
