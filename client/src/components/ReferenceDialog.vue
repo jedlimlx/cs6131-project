@@ -54,6 +54,8 @@
                             <Reference
                                 :reference="item"
                                 :selected="item.selected"
+                                :canDelete="false"
+                                :read="false"
                                 @toggle="item.selected = !item.selected"
                                 class="pa-2"
                             ></Reference>
@@ -101,14 +103,18 @@ export default {
             }
         },
         addReference() {
-            for (const item of this.references) {
-                if (item.selected) {
-                    this.doi = item.doi
-                    this.$emit("addReference")
+            if (this.tab === "one") {
+                this.$emit("addReference")
+            } else {
+                for (const item of this.references) {
+                    if (item.selected) {
+                        this.doi = item.doi
+                        this.$emit("addReference")
+                    }
                 }
-            }
 
-            this.doi = ""
+                this.doi = ""
+            }
         }
     }
 }

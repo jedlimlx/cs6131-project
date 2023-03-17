@@ -7,6 +7,7 @@
         <template v-slot:append>
             <v-btn
                 icon="mdi-trash-can"
+                v-if="canDelete"
                 elevation="0"
                 color="transparent"
                 @click="$emit('delete'); $emit('toggle')"
@@ -40,7 +41,7 @@
 
 <script lang="ts">
 export default {
-    props: [ "reference", "selected", "read" ],
+    props: [ "reference", "selected", "read", "canDelete" ],
     emits: [ "toggle" ]
 }
 </script>

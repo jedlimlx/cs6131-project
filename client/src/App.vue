@@ -81,7 +81,7 @@
             <v-dialog
                 v-model="creatingNewAccount"
                 persistent
-                max-width="290"
+                max-width="500"
             >
                 <v-card>
                     <v-card-title class="text-h5">
@@ -94,6 +94,31 @@
                             variant="outlined"
                             color="primary"
                         ></v-text-field>
+
+                        <v-text-field
+                            v-model="email"
+                            label="Enter Email"
+                            variant="outlined"
+                            color="primary"
+                        ></v-text-field>
+
+                        <v-row class="pr-3 pl-3 pt-2 pb-2">
+                            <v-text-field
+                                v-model="firstname"
+                                label="Enter First Name"
+                                variant="outlined"
+                                color="primary"
+                                class="pr-2"
+                            ></v-text-field>
+
+                            <v-text-field
+                                v-model="lastname"
+                                label="Enter Last Name"
+                                variant="outlined"
+                                color="primary"
+                                class="pl-2"
+                            ></v-text-field>
+                        </v-row>
 
                         <v-text-field
                             v-model="password"
@@ -122,7 +147,7 @@
                             Cancel
                         </v-btn>
                         <v-spacer></v-spacer>
-                        <v-btn color="primary" text @click="creatingNewAccount = false; loggedIn = true; login()">
+                        <v-btn color="primary" text @click="creatingNewAccount = false; newAccount()">
                             Create Account
                         </v-btn>
                     </v-card-actions>
@@ -195,6 +220,7 @@ import { useUserStore } from "@/store/app"
 import { storeToRefs } from "pinia"
 import Profile from "@/views/Profile.vue";
 import References from "@/views/References.vue";
+import {SERVER} from "@/main";
 
 const vuetify = createVuetify({
     components,
@@ -268,5 +294,14 @@ const login = async function() {
     } else {
         loginError.value = true
     }
+}
+
+const newAccount = async function() {
+    await (await fetch(SERVER + '/register/username='+username.value+
+        "&email="+email.value+
+        "&first_name="+firstname.value+
+        "&last_name="+lastname.value+
+        "&password="+password.value
+    )).json()
 }
 </script>

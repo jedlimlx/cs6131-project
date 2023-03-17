@@ -1,7 +1,10 @@
+import hashlib
+import secrets
 import urllib.parse
-from flask import Flask, jsonify
-from flask_mysqldb import MySQL
+
+from flask import Flask, jsonify, session
 from flask_cors import CORS
+from flask_mysqldb import MySQL
 
 from arvix import scrape_arxiv
 from apl import scrape_apl
@@ -19,6 +22,16 @@ mysql = MySQL(app)
 
 
 # Account Management
+def process_password(password):
+    salt = secrets.token_hex(16)
+    return hashlib.sha256((password + salt).encode()).hexdigest() + salt
+
+
+def check_password(password, stored_password):
+    salt = stored_password[-32:]
+    return hashlib.sha256((password + salt).encode()).hexdigest() == stored_password[:-32]
+
+
 @app.route('/login/username=<string:username>&password=<string:password>')
 def login(username, password):
     cursor = mysql.connection.cursor()
@@ -33,7 +46,7 @@ def login(username, password):
     # Closing the cursor
     cursor.close()
 
-    if data and data[3] == password:
+    if data and check_password(password, data[3]):
         return jsonify(
             {
                 "status": 1,
@@ -51,6 +64,34 @@ def login(username, password):
                 "status": 0
             }
         )
+
+
+@app.route('/register/username=<string:username>&'
+           'email=<string:email>&'
+           'first_name=<string:first_name>&'
+           'last_name=<string:last_name>&'
+           'password=<string:password>')
+def register(username, email, first_name, last_name, password):
+    cursor = mysql.connection.cursor()
+
+    # Check largest UID
+    cursor.execute(f"""
+    SELECT MAX(uid) FROM user
+    """)
+    uid = cursor.fetchone()[0] + 1
+
+    # Executing SQL Statements
+    cursor.execute(f"""
+    INSERT INTO user VALUES ({uid},"{username}","{email}","{process_password(password)}","{first_name}","{last_name}")
+    """)
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    return ""
 
 
 @app.route('/update_user/uid=<int:uid>&firstname=<string:firstname>&'
@@ -87,10 +128,10 @@ def change_password(uid, password, new_password):
     """)
     data = cursor.fetchone()
 
-    if data and data[3] == password:
+    if data and check_password(password, data[3]):
         cursor.execute(f"""
         UPDATE user
-        SET password="{new_password}"
+        SET password="{process_password(new_password)}"
         WHERE uid={uid}
         """)
 
