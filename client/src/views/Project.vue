@@ -39,6 +39,41 @@
                 </template>
                 <Task :task="item"></Task>
             </v-timeline-item>
+
+            <v-timeline-item
+                v-if="publisher && publisher.type === 1"
+                :dot-color="new Date() < new Date(publisher.deadline) ? 'orange-darken-1' : 'red'"
+                icon="mdi-book"
+            >
+                <template v-slot:opposite>
+                    {{ publisher.deadline }}
+                </template>
+                <v-card
+                    :title="publisher.pname"
+                    :subtitle="publisher.website"
+                    :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
+                    width="250"
+                    :href="publisher.website"
+                    class="text-wrap"
+                ></v-card>
+            </v-timeline-item>
+
+            <v-timeline-item
+                v-if="publisher && publisher.type === 0"
+                dot-color="black"
+                icon="mdi-book"
+            >
+                <template v-slot:opposite>
+                    No deadline :)
+                </template>
+                <v-card
+                    :title="publisher.pname"
+                    :subtitle="publisher.website"
+                    width="250"
+                    :href="publisher.website"
+                    class="text-wrap"
+                ></v-card>
+            </v-timeline-item>
         </v-timeline>
     </v-container>
 </template>
@@ -54,13 +89,21 @@ const userStore = useUserStore()
 const selectedItem: Ref = ref(0)
 const projects: Ref = ref([])
 const tasks: Ref = ref([])
+const publisher: Ref = ref([])
 
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
 }
 
-const loadProjectData = function() {
-    getTasks()
+const loadProjectData = async function() {
+    await getTasks()
+    if (projects.value[selectedItem.value].pname != null) {
+        publisher.value = await (await fetch(
+            SERVER + "/publisher/pname=" + projects.value[selectedItem.value].pname
+        )).json()
+    } else {
+        publisher.value = []
+    }
 }
 
 const getTasks = async function () {

@@ -499,5 +499,23 @@ def get_tasks(pid):
     return jsonify(tasks)
 
 
+@app.route('/publisher/pname=<string:pname>')
+def get_publisher_information(pname):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM publisher WHERE pname="{pname}" """)
+    data = cursor.fetchone()
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({
+        "pname": data[0],
+        "website": data[1],
+        "type": data[2],
+        "deadline": data[3]
+    })
+
+
 if __name__ == '__main__':
     app.run()
