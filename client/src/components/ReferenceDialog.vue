@@ -54,7 +54,7 @@
                             <Reference
                                 :reference="item"
                                 :selected="item.selected"
-                                :canDelete="false"
+                                :can-delete="false"
                                 :read="false"
                                 @toggle="item.selected = !item.selected"
                                 class="pa-2"

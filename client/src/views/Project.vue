@@ -1,85 +1,74 @@
 <template>
-    <v-container fluid>
-        <v-menu>
+    <v-container fill-height>
+        <v-row class="pb-10">
+            <div class="text-h3 pr-6">Project</div>
+            <v-btn color="primary" icon="mdi-plus" @click=""></v-btn>
+        </v-row>
+
+        <v-menu v-if="projects.length > 0">
             <template v-slot:activator="{ props }">
                 <v-btn
                     color="primary"
                     dark
                     v-bind="props"
                 >
-                    {{ items[selectedItem].text }}
+                    {{ projects[selectedItem].name }}
                 </v-btn>
             </template>
 
             <v-list>
                 <v-list-item
-                    v-for="(item, index) in items"
+                    v-for="(item, index) in projects"
                     :key="selectedItem"
                     active-color="primary"
                 >
-                    <template v-slot:prepend>
-                        <v-icon :icon="item.icon"></v-icon>
-                    </template>
-                    <v-list-item-title @click="selectedItem=index">{{ item.text }}</v-list-item-title>
+                    <v-list-item-title @click="selectedItem=index; loadProjectData()">{{ item.name }}</v-list-item-title>
                 </v-list-item>
             </v-list>
         </v-menu>
-        <v-list>
-            <v-list-subheader>REFERENCES</v-list-subheader>
 
-            <v-text-field
-                label="Search"
-                prepend-icon="mdi-magnify"
-            ></v-text-field>
-
-            <v-list-item
-                v-for="(ref, index) in items[selectedItem].references"
-                :key="selectedRef"
-                :value="ref"
-                active-color="primary"
-                rounded
+        <v-timeline direction="horizontal" class="pa-5">
+            <v-timeline-item
+                v-for="(item, index) in tasks"
+                :dot-color="item.completed ? 'green' : (new Date() < new Date(item.deadline) ? 'orange-darken-1' : 'red')"
+                :icon="item.completed ? 'mdi-progress-check' : (new Date() < new Date(item.deadline) ?
+                'mdi-progress-helper' : 'mdi-progress-alert')"
             >
-                <v-list-item-title @click="selectedRef=index" v-text="ref"></v-list-item-title>
-            </v-list-item>
-        </v-list>
+                <template v-slot:opposite>
+                    {{ item.deadline }}
+                </template>
+                <Task :task="item"></Task>
+            </v-timeline-item>
+        </v-timeline>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-import {ref, Ref} from 'vue'
+import { onMounted, ref, Ref } from 'vue'
+import { SERVER } from "@/main"
+import { useUserStore } from "@/store/app"
+import Task from "@/components/Task.vue";
+
+const userStore = useUserStore()
 
 const selectedItem: Ref = ref(0)
-const selectedRef: Ref = ref(0)
-const items: Ref = ref([
-    {
-        text: 'Attention Is All You Need',
-        icon: 'mdi-human-male-board',
-        references: [
-            "Łukasz Kaiser and Samy Bengio. Can active memory replace attention? In Advances in Neural " +
-            "Information Processing Systems, (NIPS), 2016.",
-            "Ofir Press and Lior Wolf. Using the output embedding to improve language models. arXiv " +
-            "preprint arXiv:1608.05859, 2016."
-        ]
-    },
-    {
-        text: 'An Image Is Worth 16x16 Words',
-        icon: 'mdi-tooltip-image',
-        references: [
-            "Lucas Beyer, Olivier J. Henaff, Alexander Kolesnikov, Xiaohua Zhai, and A ´ aron van den Oord. " +
-            "Are we done with imagenet? arXiv, 2020",
-            "Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT: Pre-training of deep " +
-            "bidirectional transformers for language understanding. In NAACL, 2019.",
-            "Han Hu, Zheng Zhang, Zhenda Xie, and Stephen Lin. Local relation networks for image recognition. " +
-            "In ICCV, 2019."
-        ]
-    },
-    {
-        text: 'DeiT III: Revenge of the ViT',
-        icon: 'mdi-emoticon-angry',
-        references: [
-            "El-Nouby, A., Izacard, G., Touvron, H., Laptev, I., Jegou, H., Grave, E.: Are large-scale datasets necessary for self-supervised pre-training? arXiv preprint arXiv:2112.10740 (2021)",
-            "Huang, G., Sun, Y., Liu, Z., Sedra, D., Weinberger, K.Q.: Deep networks with stochastic depth. In: European Conference on Computer Vision (2016)"
-        ]
-    },
-])
+const projects: Ref = ref([])
+const tasks: Ref = ref([])
+
+const getProjectNames = async function () {
+    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
+}
+
+const loadProjectData = function() {
+    getTasks()
+}
+
+const getTasks = async function () {
+    tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
+}
+
+onMounted(() => {
+    console.log("/projects/uid=" + userStore.uid)
+    getProjectNames()
+})
 </script>

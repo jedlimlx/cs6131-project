@@ -22,7 +22,8 @@
             subtitle="..."
         >
             <Reference
-                :read="item"
+                :read="true"
+                :can-delete="true"
                 :reference="item"
                 :selected="item.selected"
                 @toggleRead="item.read = !item.read; toggleRead(item)"

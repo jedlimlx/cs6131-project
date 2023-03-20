@@ -434,5 +434,70 @@ def delete_reference_2(doi, pid):
         })
 
 
+# Project Management
+@app.route('/projects/uid=<int:uid>')
+def get_projects(uid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT pid FROM worksOn WHERE uid="{uid}" """)
+    data = cursor.fetchall()
+
+    projects = []
+    for i in data:
+        cursor.execute(f"""SELECT * FROM project WHERE pid="{i[0]}" """)
+        project_data = cursor.fetchone()
+        project = {
+            "pid": project_data[0],
+            "name": project_data[1],
+            "pname": project_data[2],
+            "progress": project_data[3]
+        }
+
+        projects.append(project)
+
+        # Get people working on the project
+        # cursor.execute(f"""SELECT uid, role FROM worksOn WHERE pid="{i[0]}" """)
+        # users = { x[0]: x[1] for x in cursor.fetchall() }
+        # project["users"] = users
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(projects)
+
+
+# Task Management
+@app.route('/tasks/pid=<int:pid>')
+def get_tasks(pid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM task WHERE pid="{pid}" """)
+    data = cursor.fetchall()
+
+    tasks = []
+    for i in data:
+        task = {
+            "tnumber": i[1],
+            "title": i[2],
+            "description": i[3],
+            "deadline": i[4],
+            "completed": i[5]
+        }
+
+        cursor.execute(f"""
+        SELECT u.uid, u.username
+        FROM assigned a, user u 
+        WHERE pid="{pid}" AND tnumber="{i[1]}" AND a.uid=u.uid """)
+        assigned = cursor.fetchall()
+
+        task["assigned"] = [{"uid": x[0], "username": x[1]} for x in assigned]
+        tasks.append(task)
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(tasks)
+
+
 if __name__ == '__main__':
     app.run()
