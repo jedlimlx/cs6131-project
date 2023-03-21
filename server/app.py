@@ -38,7 +38,7 @@ def login(username, password):
 
     # Executing SQL Statements
     cursor.execute(f"""SELECT * FROM user WHERE username="{username}" """)
-    data = cursor.fetchone()
+    data = cursor.fetchall()
 
     # Saving the actions performed on the DB
     mysql.connection.commit()
@@ -46,7 +46,18 @@ def login(username, password):
     # Closing the cursor
     cursor.close()
 
-    if data and check_password(password, data[3]):
+    if data:
+        for i in data:
+            if check_password(password, i[3]):
+                data = i
+                break
+        else:
+            return jsonify(
+                {
+                    "status": 0
+                }
+            )
+
         return jsonify(
             {
                 "status": 1,
@@ -72,26 +83,38 @@ def login(username, password):
            'last_name=<string:last_name>&'
            'password=<string:password>')
 def register(username, email, first_name, last_name, password):
-    cursor = mysql.connection.cursor()
+    try:
+        cursor = mysql.connection.cursor()
 
-    # Check largest UID
-    cursor.execute(f"""
-    SELECT MAX(uid) FROM user
-    """)
-    uid = cursor.fetchone()[0] + 1
+        # Check largest UID
+        cursor.execute(f"""
+        SELECT MAX(uid) FROM user
+        """)
+        uid = cursor.fetchone()[0] + 1
 
-    # Executing SQL Statements
-    cursor.execute(f"""
-    INSERT INTO user VALUES ({uid},"{username}","{email}","{process_password(password)}","{first_name}","{last_name}")
-    """)
+        # Executing SQL Statements
+        cursor.execute(f"""
+        INSERT INTO user VALUES ({uid},"{username}","{email}","{process_password(password)}","{first_name}","{last_name}")
+        """)
 
-    # Saving the actions performed on the DB
-    mysql.connection.commit()
+        # Saving the actions performed on the DB
+        mysql.connection.commit()
 
-    # Closing the cursor
-    cursor.close()
+        # Closing the cursor
+        cursor.close()
 
-    return ""
+        return jsonify(
+            {
+                "status": 1
+            }
+        )
+    except Exception as e:
+        return jsonify(
+            {
+                "status": 0,
+                "error": str(e)
+            }
+        )
 
 
 @app.route('/update_user/uid=<int:uid>&firstname=<string:firstname>&'
@@ -466,6 +489,24 @@ def get_projects(uid):
     return jsonify(projects)
 
 
+@app.route('/publisher/pname=<string:pname>')
+def get_publisher_information(pname):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM publisher WHERE pname="{pname}" """)
+    data = cursor.fetchone()
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify({
+        "pname": data[0],
+        "website": data[1],
+        "type": data[2],
+        "deadline": data[3]
+    })
+
+
 # Task Management
 @app.route('/tasks/pid=<int:pid>')
 def get_tasks(pid):
@@ -477,6 +518,7 @@ def get_tasks(pid):
     tasks = []
     for i in data:
         task = {
+            "pid": pid,
             "tnumber": i[1],
             "title": i[2],
             "description": i[3],
@@ -499,22 +541,30 @@ def get_tasks(pid):
     return jsonify(tasks)
 
 
-@app.route('/publisher/pname=<string:pname>')
-def get_publisher_information(pname):
+@app.route('/assigned/pid=<int:pid>&tnumber=<int:tnumber>')
+def get_assigned(pid, tnumber):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""SELECT * FROM publisher WHERE pname="{pname}" """)
-    data = cursor.fetchone()
+    cursor.execute(f"""
+    SELECT u.uid, u.firstname, u.username 
+    FROM assigned a, user u 
+    WHERE a.pid="{pid}" AND a.tnumber="{tnumber}" AND a.uid = u.uid """)
+    data = cursor.fetchall()
+
+    assigned = []
+    for i in data:
+        assigned.append(
+            {
+                "uid": i[0],
+                "firstname": i[1],
+                "username": i[2]
+            }
+        )
 
     mysql.connection.commit()
     cursor.close()
 
-    return jsonify({
-        "pname": data[0],
-        "website": data[1],
-        "type": data[2],
-        "deadline": data[3]
-    })
+    return jsonify(assigned)
 
 
 if __name__ == '__main__':

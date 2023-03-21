@@ -200,6 +200,52 @@
                 </v-card>
             </v-dialog>
         </v-row>
+
+        <v-row justify="center">
+            <v-dialog
+                v-model="newAccountCreated"
+                persistent
+                max-width="290"
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        Success
+                    </v-card-title>
+                    <v-card-text>
+                        Your account has been created! You may now login.
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" text @click="newAccountCreated = false">
+                            Ok
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-row>
+
+        <v-row justify="center">
+            <v-dialog
+                v-model="newAccountError"
+                persistent
+                max-width="290"
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        Error
+                    </v-card-title>
+                    <v-card-text>
+                        There was an error while creating your account
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" text @click="newAccountError = false">
+                            Ok
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-row>
     </v-app>
 </template>
 
@@ -236,6 +282,9 @@ const loggingIn: Ref<boolean> = ref(false)
 const creatingNewAccount: Ref<boolean> = ref(false)
 
 const alertShown: Ref<boolean> = ref(false)
+
+const newAccountCreated: Ref<boolean> = ref(false)
+const newAccountError: Ref<boolean> = ref(false)
 
 const show1: Ref<boolean> = ref(false)
 const show2: Ref<boolean> = ref(false)
@@ -297,11 +346,16 @@ const login = async function() {
 }
 
 const newAccount = async function() {
-    await (await fetch(SERVER + '/register/username='+username.value+
+    let success = await (await fetch(SERVER + '/register/username='+username.value+
         "&email="+email.value+
         "&first_name="+firstname.value+
         "&last_name="+lastname.value+
         "&password="+password.value
     )).json()
+    if (success.status == 1) {
+        newAccountCreated.value = true
+    } else {
+        newAccountError.value = true
+    }
 }
 </script>
