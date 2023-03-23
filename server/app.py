@@ -523,7 +523,7 @@ def get_tasks(pid):
             "title": i[2],
             "description": i[3],
             "deadline": i[4],
-            "completed": i[5]
+            "completed": True if i[5] == 1 else False
         }
 
         cursor.execute(f"""
@@ -565,6 +565,21 @@ def get_assigned(pid, tnumber):
     cursor.close()
 
     return jsonify(assigned)
+
+
+@app.route('/task_completed/pid=<int:pid>&tnumber=<int:tnumber>&completed=<int:completed>')
+def task_completed(pid, tnumber, completed):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""
+    UPDATE task
+    SET completed=%s 
+    WHERE pid=%s AND tnumber=%s """, (completed,pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
 
 
 if __name__ == '__main__':

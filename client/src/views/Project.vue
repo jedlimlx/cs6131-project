@@ -27,54 +27,56 @@
             </v-list>
         </v-menu>
 
-        <v-timeline direction="horizontal" class="pa-5">
-            <v-timeline-item
-                v-for="(item, index) in tasks"
-                :dot-color="item.completed ? 'green' : (new Date() < new Date(item.deadline) ? 'orange-darken-1' : 'red')"
-                :icon="item.completed ? 'mdi-progress-check' : (new Date() < new Date(item.deadline) ?
-                'mdi-progress-helper' : 'mdi-progress-alert')"
-            >
-                <template v-slot:opposite>
-                    {{ item.deadline }}
-                </template>
-                <Task :task="item"></Task>
-            </v-timeline-item>
+        <v-virtual-scroll height="500">
+            <v-timeline class="pa-5">
+                <v-timeline-item
+                    v-for="(item, index) in tasks"
+                    :dot-color="item.completed ? 'green' : (new Date() < new Date(item.deadline) ? 'orange-darken-1' : 'red')"
+                    :icon="item.completed ? 'mdi-progress-check' : (new Date() < new Date(item.deadline) ?
+                    'mdi-progress-helper' : 'mdi-progress-alert')"
+                >
+                    <template v-slot:opposite>
+                        {{ item.deadline }}
+                    </template>
+                    <Task :task="item"></Task>
+                </v-timeline-item>
 
-            <v-timeline-item
-                v-if="publisher && publisher.type === 1"
-                :dot-color="new Date() < new Date(publisher.deadline) ? 'orange-darken-1' : 'red'"
-                icon="mdi-book"
-            >
-                <template v-slot:opposite>
-                    {{ publisher.deadline }}
-                </template>
-                <v-card
-                    :title="publisher.pname"
-                    :subtitle="publisher.website"
-                    :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
-                    width="250"
-                    :href="publisher.website"
-                    class="text-wrap"
-                ></v-card>
-            </v-timeline-item>
+                <v-timeline-item
+                    v-if="publisher && publisher.type === 1"
+                    :dot-color="new Date() < new Date(publisher.deadline) ? 'orange-darken-1' : 'red'"
+                    icon="mdi-book"
+                >
+                    <template v-slot:opposite>
+                        {{ publisher.deadline }}
+                    </template>
+                    <v-card
+                        :title="publisher.pname"
+                        :subtitle="publisher.website"
+                        :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
+                        width="250"
+                        :href="publisher.website"
+                        class="text-wrap"
+                    ></v-card>
+                </v-timeline-item>
 
-            <v-timeline-item
-                v-if="publisher && publisher.type === 0"
-                dot-color="black"
-                icon="mdi-book"
-            >
-                <template v-slot:opposite>
-                    No deadline :)
-                </template>
-                <v-card
-                    :title="publisher.pname"
-                    :subtitle="publisher.website"
-                    width="250"
-                    :href="publisher.website"
-                    class="text-wrap"
-                ></v-card>
-            </v-timeline-item>
-        </v-timeline>
+                <v-timeline-item
+                    v-if="publisher && publisher.type === 0"
+                    dot-color="black"
+                    icon="mdi-book"
+                >
+                    <template v-slot:opposite>
+                        No deadline :)
+                    </template>
+                    <v-card
+                        :title="publisher.pname"
+                        :subtitle="publisher.website"
+                        width="250"
+                        :href="publisher.website"
+                        class="text-wrap"
+                    ></v-card>
+                </v-timeline-item>
+            </v-timeline>
+        </v-virtual-scroll>
     </v-container>
 </template>
 
