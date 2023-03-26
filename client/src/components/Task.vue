@@ -20,17 +20,39 @@
                 :color="colour(item.uid)"
                 class="ma-2"
                 closable
+                @click:close="removeAssigned(item.pid)"
             >
                 {{ item.firstname }}
             </v-chip>
 
-            <v-chip
-                color="primary"
-                class="ma-2"
-            >+</v-chip>
+            <v-menu>
+                <template v-slot:activator="{ props }">
+                    <v-chip
+                        color="primary"
+                        class="ma-2"
+                        v-bind="props"
+                    >+
+                    </v-chip>
+                </template>
+                <v-list>
+                    <v-list-item
+                        v-for="(item, index) in members.filter(x => !assigned.map(y => y.uid).includes(x.uid))"
+                        :key="index"
+                        :value="index"
+                    >
+                        <v-list-item-title
+                            @click="addAssigned(item.uid)"
+                        >{{ item.firstname }}</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
         </v-row>
         <v-divider></v-divider>
         <v-card-actions>
+            <v-btn color="red">
+                Delete
+            </v-btn>
+            <v-spacer></v-spacer>
             <v-btn color="primary">
                 Edit
             </v-btn>
@@ -39,13 +61,13 @@
 </template>
 
 <script lang="js">
-import { SERVER } from "@/main"
+import {SERVER} from "@/main"
 import drs from "deterministic-random-sequence"
 
 export default {
-    components: { },
-    props: [ "task" ],
-    emits: [ ],
+    components: {},
+    props: ["task", "members"],
+    emits: [],
     data() {
         return {
             assigned: []
@@ -55,7 +77,7 @@ export default {
         async f(pid, tnumber) {
             // @ts-ignore
             this.assigned = await (await
-                fetch(SERVER+"/assigned/pid="+pid+"&tnumber="+tnumber)
+                    fetch(SERVER + "/assigned/pid=" + pid + "&tnumber=" + tnumber)
             ).json()
         },
         colour(uid) {
@@ -69,14 +91,30 @@ export default {
                 'deep-orange', 'indigo', 'deep-purple', 'amber'][index % 10]
         },
         async updateCompleted() {
-            await fetch(SERVER+
-                "/task_completed/pid="+this.task.pid+
-                "&tnumber="+this.task.tnumber+
-                "&completed="+(0+this.task.completed)
+            await fetch(SERVER +
+                "/task_completed/pid=" + this.task.pid +
+                "&tnumber=" + this.task.tnumber +
+                "&completed=" + (0 + !this.task.completed)
+            )
+        },
+        async addAssigned(uid) {
+            this.f(this.task.pid, this.task.tnumber)
+            await fetch(SERVER +
+                "/add_assigned/uid=" + uid +
+                "&pid=" + this.task.pid +
+                "&tnumber=" + this.task.tnumber
+            )
+        },
+        async removeAssigned(uid) {
+            this.f(this.task.pid, this.task.tnumber)
+            await fetch(SERVER +
+                "/remove_assigned/uid=" + uid +
+                "&pid=" + this.task.pid +
+                "&tnumber=" + this.task.tnumber
             )
         }
     },
-    mounted() {
+    created() {
         // @ts-ignore
         this.f(this.task.pid, this.task.tnumber)
     }

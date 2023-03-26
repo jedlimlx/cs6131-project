@@ -38,7 +38,10 @@
                     <template v-slot:opposite>
                         {{ item.deadline }}
                     </template>
-                    <Task :task="item"></Task>
+                    <Task
+                        :task="item"
+                        :members="members"
+                    ></Task>
                 </v-timeline-item>
 
                 <v-timeline-item
@@ -92,6 +95,7 @@ const selectedItem: Ref = ref(0)
 const projects: Ref = ref([])
 const tasks: Ref = ref([])
 const publisher: Ref = ref([])
+const members: Ref = ref([])
 
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
@@ -110,10 +114,10 @@ const loadProjectData = async function() {
 
 const getTasks = async function () {
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
+    members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
 }
 
 onMounted(() => {
-    console.log("/projects/uid=" + userStore.uid)
     getProjectNames()
 })
 </script>

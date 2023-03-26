@@ -507,6 +507,34 @@ def get_publisher_information(pname):
     })
 
 
+@app.route('/members/pid=<int:pid>')
+def get_members(pid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""
+    SELECT u.uid, u.username, u.firstname, u.lastname, w.role 
+    FROM worksOn w, user u 
+    WHERE w.pid=%s AND u.uid=w.uid """, (pid,))
+    data = cursor.fetchall()
+
+    users = []
+    for i in data:
+        user = {
+            "uid": i[0],
+            "username": i[1],
+            "firstname": i[2],
+            "lastname": i[3],
+            "role": i[4]
+        }
+
+        users.append(user)
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(users)
+
+
 # Task Management
 @app.route('/tasks/pid=<int:pid>')
 def get_tasks(pid):
@@ -529,7 +557,7 @@ def get_tasks(pid):
         cursor.execute(f"""
         SELECT u.uid, u.username
         FROM assigned a, user u 
-        WHERE pid=%s AND tnumber=%s AND a.uid=u.uid """, (pid,i[1],))
+        WHERE pid=%s AND tnumber=%s AND a.uid=u.uid """, (pid, i[1],))
         assigned = cursor.fetchall()
 
         task["assigned"] = [{"uid": x[0], "username": x[1]} for x in assigned]
@@ -575,6 +603,32 @@ def task_completed(pid, tnumber, completed):
     UPDATE task
     SET completed=%s 
     WHERE pid=%s AND tnumber=%s """, (completed,pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/add_assigned/uid=<int:uid>&pid=<int:pid>&tnumber=<int:tnumber>')
+def add_assigned(uid, pid, tnumber):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""INSERT INTO assigned VALUES (%s,%s,%s)""", (uid,pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/remove_assigned/uid=<int:uid>&pid=<int:pid>&tnumber=<int:tnumber>')
+def remove_assigned(uid, pid, tnumber):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""
+    DELETE FROM assigned 
+    WHERE uid=%s AND pid=%s AND tnumber=%s""", (uid,pid,tnumber,))
 
     mysql.connection.commit()
     cursor.close()
