@@ -535,6 +535,61 @@ def get_members(pid):
     return jsonify(users)
 
 
+@app.route('/add_members/pid=<int:pid>&uid=<int:uid>&role=<string:role>')
+def add_members(pid, uid, role):
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"""INSERT INTO worksOn VALUES (%s,%s,%s)""", (uid,pid,role))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/remove_members/pid=<int:pid>&uid=<int:uid>')
+def remove_members(pid, uid):
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"""DELETE FROM worksOn WHERE pid=%s AND uid=%s""", (uid,pid,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/change_role/pid=<int:pid>&uid=<int:uid>&role=<string:role>')
+def change_role(pid, uid, role):
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"""UPDATE worksOn SET role=%s WHERE uid=%s AND pid=%s""", (role,uid,pid,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/possible_members/username=<string:username>')
+def possible_members(username):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""SELECT uid, username FROM user WHERE username LIKE %s """, ("%"+username+"%",))
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    return jsonify([
+        {
+            "uid": x[0],
+            "username": x[1]
+        } for x in data
+    ])
+
+
 # Task Management
 @app.route('/tasks/pid=<int:pid>')
 def get_tasks(pid):
