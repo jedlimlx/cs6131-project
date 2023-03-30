@@ -549,7 +549,7 @@ def add_members(pid, uid, role):
 @app.route('/remove_members/pid=<int:pid>&uid=<int:uid>')
 def remove_members(pid, uid):
     cursor = mysql.connection.cursor()
-    cursor.execute(f"""DELETE FROM worksOn WHERE pid=%s AND uid=%s""", (uid,pid,))
+    cursor.execute(f"""DELETE FROM worksOn WHERE pid=%s AND uid=%s""", (pid,uid,))
 
     mysql.connection.commit()
     cursor.close()

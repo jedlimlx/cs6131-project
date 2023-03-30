@@ -154,6 +154,14 @@
                                         >
                                             {{ item.role }}
                                         </v-btn>
+
+                                        <v-btn
+                                            icon="mdi-trash-can"
+                                            elevation="0"
+                                            @click="deleteMember(item.uid)"
+                                        >
+                                            <v-icon color="red"></v-icon>
+                                        </v-btn>
                                     </template>
                                     <v-list>
                                         <v-list-item
@@ -175,7 +183,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, Ref, mergeProps } from 'vue'
+import { onMounted, ref, Ref } from 'vue'
 import { SERVER } from "@/main"
 import { useUserStore } from "@/store/app"
 import { colour } from "@/colour"
@@ -219,7 +227,12 @@ const getPossibleMembers = async function() {
 }
 
 const addMember = async function(uid: Number) {
-    await fetch(SERVER + '/add_members/pid=' + projects.value[selectedItem.value].pid + "&uid=" + uid + "&role=member")
+    await fetch(SERVER + "/add_members/pid=" + projects.value[selectedItem.value].pid + "&uid=" + uid + "&role=member")
+    members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+}
+
+const deleteMember = async function(uid: Number) {
+    await fetch(SERVER + "/remove_members/pid=" + projects.value[selectedItem.value].pid + "&uid=" + uid)
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
 }
 
