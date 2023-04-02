@@ -47,6 +47,7 @@
                         <Task
                             :task="item"
                             :members="members"
+                            @showDialog="dialog = true"
                         ></Task>
                     </v-timeline-item>
 
@@ -179,6 +180,61 @@
                 </v-card>
             </v-col>
         </v-row>
+
+        <v-dialog
+            v-model="errorDialog"
+            persistent
+            max-width="290"
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    Error
+                </v-card-title>
+                <v-card-text>
+                    {{ error }}
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" text @click="errorDialog = false">
+                        Ok
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog
+            v-model="dialog"
+            fullscreen
+            :scrim="false"
+            transition="dialog-bottom-transition"
+        >
+            <v-card>
+                <v-toolbar
+                    dark
+                    color="primary"
+                >
+                    <v-btn
+                        icon
+                        dark
+                        @click="dialog = false"
+                    >
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>Edit Task</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-toolbar-items>
+                        <v-btn
+                            variant="text"
+                            @click="dialog = false"
+                        >
+                            Save
+                        </v-btn>
+                    </v-toolbar-items>
+                </v-toolbar>
+
+                <mavon-editor></mavon-editor>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -187,6 +243,7 @@ import { onMounted, ref, Ref } from 'vue'
 import { SERVER } from "@/main"
 import { useUserStore } from "@/store/app"
 import { colour } from "@/colour"
+
 import Task from "@/components/Task.vue"
 
 const userStore = useUserStore()
@@ -201,6 +258,11 @@ const possibleUsername: Ref = ref([])
 const possibleMembers: Ref = ref([])
 
 const menu2: Ref = ref(false)
+
+const error: Ref = ref("You cannot remove yourself from the project!")
+const errorDialog: Ref = ref(false)
+
+const dialog: Ref = ref(false)
 
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
@@ -232,8 +294,14 @@ const addMember = async function(uid: Number) {
 }
 
 const deleteMember = async function(uid: Number) {
-    await fetch(SERVER + "/remove_members/pid=" + projects.value[selectedItem.value].pid + "&uid=" + uid)
-    members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+    // Input Validation
+    if (members.value.length > 1 && uid != userStore.uid) {
+        await fetch(SERVER + "/remove_members/pid=" + projects.value[selectedItem.value].pid + "&uid=" + uid)
+        members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+    } else if (uid == userStore.uid) {  // Cannot delete yourself
+        error.value = "You cannot remove yourself from the project!"
+        errorDialog.value = true
+    }
 }
 
 onMounted(() => {

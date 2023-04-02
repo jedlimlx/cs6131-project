@@ -43,9 +43,9 @@
                         :key="index"
                         :value="index"
                     >
-                        <v-list-item-title
-                            @click="addAssigned(item.uid)"
-                        >{{ item.firstname }}</v-list-item-title>
+                        <v-list-item-title @click="addAssigned(item.uid)">
+                            {{ item.firstname }}
+                        </v-list-item-title>
                     </v-list-item>
                 </v-list>
             </v-menu>
@@ -56,7 +56,7 @@
                 Delete
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn color="primary">
+            <v-btn color="primary" @click="$emit('showDialog')">
                 Edit
             </v-btn>
         </v-card-actions>
@@ -70,7 +70,7 @@ import { colour } from "@/colour"
 export default {
     components: {},
     props: ["task", "members"],
-    emits: [],
+    emits: ["showDialog"],
     data() {
         return {
             assigned: []

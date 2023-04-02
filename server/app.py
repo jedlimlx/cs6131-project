@@ -8,6 +8,7 @@ from flask_mysqldb import MySQL
 
 from arvix import scrape_arxiv
 from apl import scrape_apl
+from cambridge import scrape_cambridge
 from nature import scrape_nature
 
 
@@ -315,6 +316,8 @@ def check_doi(doi, cursor):
             command = scrape_apl(doi)
         elif "10.1038" in doi:  # nature
             command = scrape_nature(doi)
+        elif "10.1017" in doi:  # cambridge
+            command = scrape_cambridge(doi)
         else:
             raise Exception("Unsupported DOI")
 
@@ -387,7 +390,7 @@ def update_read(uid, doi, read):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""UPDATE isRead SET hasRead=%s WHERE doi=%s AND uid = %s; """, (read,doi,uid,))
+        cursor.execute(f"""UPDATE isRead SET hasRead=%s WHERE doi=%s AND uid=%s; """, (read,doi,uid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -413,7 +416,7 @@ def delete_reference_1(doi, uid):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""DELETE FROM isRead WHERE doi=%s AND uid = %s; """, (doi,uid,))
+        cursor.execute(f"""DELETE FROM isRead WHERE doi=%s AND uid=%s; """, (doi,uid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -439,7 +442,7 @@ def delete_reference_2(doi, pid):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""DELETE FROM isRead WHERE doi=%s AND pid = %s; """, (doi,pid,))
+        cursor.execute(f"""DELETE FROM cited WHERE doi=%s AND pid=%s; """, (doi,pid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -462,26 +465,20 @@ def delete_reference_2(doi, pid):
 def get_projects(uid):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""SELECT pid FROM worksOn WHERE uid=%s """, (uid,))
+    cursor.execute(f"""
+    SELECT p.pid, p.name, p.pname, p.progress 
+    FROM worksOn w, project p 
+    WHERE uid=%s AND p.pid=w.pid """, (uid,))
     data = cursor.fetchall()
 
-    projects = []
-    for i in data:
-        cursor.execute(f"""SELECT * FROM project WHERE pid=%s """, (i[0],))
-        project_data = cursor.fetchone()
-        project = {
+    projects = [
+        {
             "pid": project_data[0],
             "name": project_data[1],
             "pname": project_data[2],
             "progress": project_data[3]
-        }
-
-        projects.append(project)
-
-        # Get people working on the project
-        # cursor.execute(f"""SELECT uid, role FROM worksOn WHERE pid="{i[0]}" """)
-        # users = { x[0]: x[1] for x in cursor.fetchall() }
-        # project["users"] = users
+        } for project_data in data
+    ]
 
     mysql.connection.commit()
     cursor.close()
