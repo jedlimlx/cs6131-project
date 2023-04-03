@@ -15,9 +15,12 @@
 
                     <br>
 
-                    <div class="text-h5 text-white" style="margin-left:30px">
-                        Organised. Collaborative. Productive.
-                    </div>
+                    <v-row  style="margin-left:30px">
+                        <v-img max-width="30" aspect-ratio="1" src="public/icon.png"></v-img>
+                        <div class="text-h5 text-white" style="margin-left:10px">
+                            Organised. Collaborative. Productive.
+                        </div>
+                    </v-row>
 
                     <br>
 

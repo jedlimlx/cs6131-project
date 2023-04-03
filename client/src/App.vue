@@ -266,7 +266,7 @@ import { useUserStore } from "@/store/app"
 import { storeToRefs } from "pinia"
 import Profile from "@/views/Profile.vue";
 import References from "@/views/References.vue";
-import {SERVER} from "@/main";
+import { SERVER } from "@/main";
 
 const vuetify = createVuetify({
     components,
