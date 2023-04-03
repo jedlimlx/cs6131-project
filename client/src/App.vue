@@ -34,7 +34,7 @@
         </v-app-bar>
 
         <v-main :style="{'margin-top': '0px', minHeight: '0px'}">
-            <router-view />
+            <router-view @newAccount="creatingNewAccount=true"/>
         </v-main>
 
         <v-row justify="center">
@@ -274,12 +274,11 @@ const vuetify = createVuetify({
 })
 
 const userStore = useUserStore()
-const { loggedIn, username, firstname, lastname, uid, email } = storeToRefs(userStore)
+const { loggedIn, username, firstname, lastname, uid, email, creatingNewAccount } = storeToRefs(userStore)
 
 const drawerShown: Ref<boolean> = ref(false)
 
 const loggingIn: Ref<boolean> = ref(false)
-const creatingNewAccount: Ref<boolean> = ref(false)
 
 const alertShown: Ref<boolean> = ref(false)
 

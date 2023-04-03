@@ -10,7 +10,8 @@ export const useUserStore = defineStore('user', {
         firstname: "",
         lastname: "",
         uid: -1,
-        email: ""
+        email: "",
+        creatingNewAccount: false
     }),
     actions: {
         async login(username: string, password: string): Promise<boolean> {
