@@ -688,5 +688,18 @@ def remove_assigned(uid, pid, tnumber):
     return ""
 
 
+# Getting Announcements
+def get_announcements(pid):
+    pass
+
+
+def make_announcement(pid):
+    pass
+
+
+def delete_announcement(pid):
+    pass
+
+
 if __name__ == '__main__':
     app.run()

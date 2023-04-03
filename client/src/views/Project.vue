@@ -33,7 +33,21 @@
 
         <v-row class="pt-10">
             <v-virtual-scroll height="500">
-                <div class="text-h4 centre">Timeline</div>
+                <v-row style="margin-left:10px">
+                    <div class="text-h4 centre">Timeline</div>
+                    <v-progress-circular
+                        :rotate="360"
+                        :size="50"
+                        :width="5"
+                        :model-value="projects[selectedItem].progress*100"
+                        color="primary"
+                        style="margin-left:10px"
+                        v-if="projects[selectedItem]"
+                    >
+                        {{ projects[selectedItem].progress*100 }}
+                    </v-progress-circular>
+                </v-row>
+
                 <v-timeline class="pa-5">
                     <v-timeline-item
                         v-for="(item, index) in tasks"
@@ -48,6 +62,7 @@
                             :task="item"
                             :members="members"
                             @showDialog="dialog = true"
+                            @completenessChanged="getProjectNames()"
                         ></Task>
                     </v-timeline-item>
 

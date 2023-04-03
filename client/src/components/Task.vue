@@ -8,7 +8,7 @@
             <v-checkbox
                 color="green"
                 v-model="task.completed"
-                @click="updateCompleted()"
+                @click="updateCompleted(); $emit('completenessChanged')"
             ></v-checkbox>
         </template>
         <v-card-title class="text-wrap"></v-card-title>
@@ -70,7 +70,7 @@ import { colour } from "@/colour"
 export default {
     components: {},
     props: ["task", "members"],
-    emits: ["showDialog"],
+    emits: ["showDialog", "completenessChanged"],
     data() {
         return {
             assigned: []
