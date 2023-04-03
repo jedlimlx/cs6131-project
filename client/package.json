@@ -16,8 +16,10 @@
     "pinia": "^2.0.23",
     "pinia-plugin-persistedstate": "^3.1.0",
     "roboto-fontface": "*",
+    "scrollreveal": "^4.0.9",
     "vue": "^3.2.13",
     "vue-router": "^4.0.0",
+    "vue-scroll-reveal": "github:tserkov/vue-scroll-reveal#v2",
     "vuetify": "^3.0.0",
     "webfontloader": "^1.0.0"
   },

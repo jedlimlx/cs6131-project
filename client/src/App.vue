@@ -33,7 +33,7 @@
             </v-btn>
         </v-app-bar>
 
-        <v-main>
+        <v-main :style="{'margin-top': '0px', minHeight: '0px'}">
             <router-view />
         </v-main>
 

@@ -1,6 +1,6 @@
 <template>
     <v-container fill-height>
-        <v-card width="500">
+        <v-card width="500" class="mt-10">
             <v-card-title v-if="!editing">{{ userStore.firstname }} {{ userStore.lastname }}</v-card-title>
             <v-row class="pa-6" v-if="editing">
                 <v-text-field

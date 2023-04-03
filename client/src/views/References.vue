@@ -1,6 +1,6 @@
 <template>
     <v-container fill-height>
-        <v-row class="pb-10">
+        <v-row class="pb-10 pt-10">
             <div class="text-h3 pr-6">References</div>
             <v-btn color="primary" icon="mdi-book-plus" @click="//@ts-ignore
             $refs.refDialog.show = true"></v-btn>
@@ -32,7 +32,7 @@
             ></Reference>
         </v-list>
 
-        <v-row justify="center">
+        <v-row justify="center" class="pb-10">
             <v-dialog
                 v-model="errorDialog"
                 persistent
