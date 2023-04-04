@@ -23,3 +23,11 @@
 #app {
     font-family: Montserrat, sans-serif;
 }
+
+.v-overlay__content {
+    background: none !important;
+}
+
+.v-overlay__scrim {
+    pointer-events: none
+}
