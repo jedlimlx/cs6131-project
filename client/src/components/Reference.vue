@@ -42,6 +42,6 @@
 <script lang="ts">
 export default {
     props: [ "reference", "selected", "read", "canDelete" ],
-    emits: [ "toggle" ]
+    emits: [ "toggle", "toggleRead", "delete" ]
 }
 </script>

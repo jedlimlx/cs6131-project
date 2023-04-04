@@ -10,8 +10,97 @@
             v-model="searchTerm"
             label="Search"
             prepend-icon="mdi-magnify"
-            @change="search(searchTerm)"
+            @change="search()"
         ></v-text-field>
+
+        <v-row rows="12">
+            <v-autocomplete
+                v-model="journalFilter"
+                :items="journals"
+                chips
+                closable-chips
+                color="primary"
+                item-title="pname"
+                item-value="pname"
+                label="Journal"
+                multiple
+                class="pa-5"
+                style="width: 300px"
+                :readonly="!useJournals"
+                @update:modelValue="search()"
+            >
+                <template v-slot:append>
+                    <v-slide-x-reverse-transition mode="out-in">
+                        <v-icon
+                            :key="`icon-${useJournals}`"
+                            :color="useJournals ? 'green-darken-3' : 'gray'"
+                            :icon="useJournals ? 'mdi-filter-check' : 'mdi-filter-off'"
+                            @click="useJournals = !useJournals; search()"
+                        ></v-icon>
+                    </v-slide-x-reverse-transition>
+                </template>
+
+                <template v-slot:chip="{ props, item }">
+                    <v-chip
+                        v-bind="props"
+                        :text="item.raw.pname"
+                    ></v-chip>
+                </template>
+
+                <template v-slot:item="{ props, item }">
+                    <v-list-item
+                        v-bind="props"
+                        :title="item.raw.pname"
+                        :subtitle="item.raw.website"
+                    ></v-list-item>
+                </template>
+            </v-autocomplete>
+
+            <v-autocomplete
+                :items="['Read', 'Not Read']"
+                v-model="readFilter"
+                chips
+                closable-chips
+                color="primary"
+                item-title="pname"
+                item-value="pname"
+                label="Read"
+                multiple
+                class="pa-5"
+                style="width: 300px"
+                :readonly="!useReadFilter"
+                @update:modelValue="search()"
+            >
+                <template v-slot:append>
+                    <v-slide-x-reverse-transition mode="out-in">
+                        <v-icon
+                            :key="`icon-${useReadFilter}`"
+                            :color="useReadFilter ? 'green-darken-3' : 'gray'"
+                            :icon="useReadFilter ? 'mdi-filter-check' : 'mdi-filter-off'"
+                            @click="useReadFilter = !useReadFilter; search()"
+                        ></v-icon>
+                    </v-slide-x-reverse-transition>
+                </template>
+
+                <template v-slot:chip="{ props, item }">
+                    <v-chip
+                        v-bind="props"
+                        :prepend-icon="item.raw === 'Read' ? 'mdi-book-check' : 'mdi-book'"
+                        :color="item.raw === 'Read' ? 'green' : 'red'"
+                        :text="item.raw"
+                    ></v-chip>
+                </template>
+
+                <template v-slot:item="{ props, item }">
+                    <v-list-item
+                        v-bind="props"
+                        :prepend-icon="item.raw === 'Read' ? 'mdi-book-check' : 'mdi-book'"
+                        :color="item.raw === 'Read' ? 'green' : 'red'"
+                        :title="item.raw"
+                    ></v-list-item>
+                </template>
+            </v-autocomplete>
+        </v-row>
 
         <v-list
             v-for="item in references"
@@ -84,9 +173,14 @@ const refDialog = ref(null)
 const errorDialog = ref(false)
 const error = ref("")
 
-onMounted(() => {
-    return { refDialog }
-})
+const journals = ref([])
+
+const useJournals = ref(false)
+const useReadFilter = ref(false)
+
+const journalFilter = ref([])
+const readFilter = ref([])
+
 
 const loadReference = async function () {
     let data = await (await fetch(SERVER + "/references/uid=" + userStore.uid)).json()
@@ -112,11 +206,15 @@ const addReference = async function() {
     await loadReference()
 }
 
-const search = function (keyword: string) {
+const search = function() {
     references.value = []
     for (const item of allReferences.value) {
         // @ts-ignore
-        if (item.title.toLowerCase().includes(keyword.toLowerCase())) {
+        if (
+            item.title.toLowerCase().includes(searchTerm.value.toLowerCase()) &&
+            (!useJournals.value || journalFilter.value.includes(item.pname)) &&
+            (!useReadFilter || readFilter.value.includes(item.read ? "Read" : "Not Read"))
+        ) {
             references.value.push(item)
         }
     }
@@ -132,14 +230,19 @@ const toggleRead = function(item: object) {
     fetch(SERVER + "/update_read/doi=\""+item.doi.replace("/", "$2F")+"&uid="+userStore.uid+"&read="+(0+item.read))
 }
 
-
 const deleteReference = function(item: object) {
     //@ts-ignore
     fetch(SERVER + "/delete_reference/doi=\""+item.doi.replace("/", "$2F")+"&uid="+userStore.uid)
     references.value = references.value.filter(i => i !== item)
 }
 
+const getJournals = async function() {
+    journals.value = await (await fetch(SERVER + "/publishers")).json()
+}
+
 onMounted(() => {
     loadReference()
+    getJournals()
+    return { refDialog }
 })
 </script>

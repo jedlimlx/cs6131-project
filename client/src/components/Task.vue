@@ -3,6 +3,7 @@
         width="250"
         :color="task.completed ? 'green-lighten-5' : (new Date() < new Date(task.deadline) ? 'orange-lighten-5' : 'red-lighten-5')"
         :title="task.title"
+        class="text-wrap"
     >
         <template v-slot:append>
             <v-checkbox

@@ -701,5 +701,28 @@ def delete_announcement(pid):
     pass
 
 
+# Getting Publishers
+@app.route("/publishers")
+def get_publishers():
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM publisher """)
+    data = cursor.fetchall()
+
+    publishers = [
+        {
+            "pname": x[0],
+            "website": x[1],
+            "type": x[2],
+            "deadline": x[3]
+        } for x in data
+    ]
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return publishers
+
+
 if __name__ == '__main__':
     app.run()
