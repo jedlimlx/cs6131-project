@@ -247,17 +247,22 @@
                     </v-toolbar-items>
                 </v-toolbar>
 
-                <mavon-editor></mavon-editor>
+                <mavon-editor v-model="text"></mavon-editor>
             </v-card>
         </v-dialog>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, Ref } from 'vue'
+import { createApp, onMounted, ref, Ref } from 'vue'
 import { SERVER } from "@/main"
 import { useUserStore } from "@/store/app"
 import { colour } from "@/colour"
+
+import App from '@/App.vue'
+import { mavonEditor } from "mavon-editor"
+import "mavon-editor/dist/css/index.css"
+createApp(App).use(mavonEditor)
 
 import Task from "@/components/Task.vue"
 
@@ -278,6 +283,8 @@ const error: Ref = ref("You cannot remove yourself from the project!")
 const errorDialog: Ref = ref(false)
 
 const dialog: Ref = ref(false)
+
+const text: Ref = ref("abcdef\nabcdef\n**asdasdasd**")
 
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
