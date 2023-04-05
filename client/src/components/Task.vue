@@ -71,7 +71,7 @@ import { colour } from "@/colour"
 export default {
     components: {},
     props: ["task", "members"],
-    emits: ["showDialog", "completenessChanged"],
+    emits: ["showDialog", "completenessChanged", "delete"],
     data() {
         return {
             assigned: []

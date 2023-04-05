@@ -247,22 +247,23 @@
                     </v-toolbar-items>
                 </v-toolbar>
 
-                <mavon-editor v-model="text"></mavon-editor>
+                <VMarkdownEditor
+                    v-model="text"
+                    locale="en"
+                ></VMarkdownEditor>
             </v-card>
         </v-dialog>
     </v-container>
 </template>
 
 <script lang="ts" setup>
-import { createApp, onMounted, ref, Ref } from 'vue'
+import { onMounted, ref, Ref } from 'vue'
 import { SERVER } from "@/main"
 import { useUserStore } from "@/store/app"
 import { colour } from "@/colour"
 
-import App from '@/App.vue'
-import { mavonEditor } from "mavon-editor"
-import "mavon-editor/dist/css/index.css"
-createApp(App).use(mavonEditor)
+import { VMarkdownEditor } from 'vue3-markdown'
+import 'vue3-markdown/dist/style.css'
 
 import Task from "@/components/Task.vue"
 

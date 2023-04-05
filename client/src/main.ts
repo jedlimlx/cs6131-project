@@ -27,10 +27,4 @@ const pinia = createPinia()
 
 pinia.use(piniaPluginPersistedState)
 
-// Use Mavon Editor
-import mavonEditor from "mavon-editor";
-import "mavon-editor/dist/css/index.css";
-
-app.use(mavonEditor)
-
 export const SERVER = "http://localhost:5000"

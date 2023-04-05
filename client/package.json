@@ -12,7 +12,6 @@
     "@mdi/font": "7.0.96",
     "core-js": "^3.8.3",
     "deterministic-random-sequence": "^1.0.6",
-    "mavon-editor": "^2.10.4",
     "pinia": "^2.0.23",
     "pinia-plugin-persistedstate": "^3.1.0",
     "roboto-fontface": "*",
@@ -20,6 +19,7 @@
     "vue": "^3.2.13",
     "vue-router": "^4.0.0",
     "vue-scroll-reveal": "github:tserkov/vue-scroll-reveal#v2",
+    "vue3-markdown": "^1.1.7",
     "vuetify": "^3.0.0",
     "webfontloader": "^1.0.0"
   },
