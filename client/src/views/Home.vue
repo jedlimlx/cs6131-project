@@ -37,9 +37,9 @@
 
             <v-row align-content="center" justify="center" style="background: none">
                 <v-tooltip
-                    origin="overlay"
+                    origin="top center"
                     location="top center"
-                    style="background:none !important; color: transparent!important"
+                    style="color: transparent!important"
                     v-model="tooltipShow"
                     no-click-animation
                     scrim="transparent"
@@ -67,7 +67,7 @@
                                 color="secondary"
                                 align-tabs="center"
                                 class="text-white"
-                                style="backdrop-filter: blur(3px); background:none"
+                                style="backdrop-filter: blur(10px); background:none"
                             >
                                 <v-tab :value="1">Cite</v-tab>
                                 <v-tab :value="2">Delegate</v-tab>
@@ -82,38 +82,70 @@
             <v-timeline>
                 <v-timeline-item class="item">
                     <v-card
-                        :width="300"
+                        :width="400"
                         height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word text-h1"
-                        text="Set deadlines and assign people to do work!"
-                        title="Organise tasks"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                    ></v-card>
-                </v-timeline-item>
-
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="300"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word text-h1"
-                        text="A central place for everyone to store their experimental logs and keep track of each other's progress"
-                        title="Write experimental logs"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                    ></v-card>
-                </v-timeline-item>
-
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="300"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word text-h1"
+                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
                         text="Keep track of all your references - the ones you need to read, the ones you have read, etc."
                         title="Keep track of references"
                         style="backdrop-filter: blur(10px); background: none"
                         variant="outlined"
-                    ></v-card>
+                        prepend-icon="mdi-bookshelf"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="25"></v-icon>
+                        </template>
+                    </v-card>
+                </v-timeline-item>
+
+                <v-timeline-item class="item">
+                    <v-card
+                        :width="400"
+                        height="170"
+                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
+                        text="Set deadlines and assign people to do work!"
+                        title="Organise tasks"
+                        style="backdrop-filter: blur(10px); background: none"
+                        variant="outlined"
+                        prepend-icon="mdi-clipboard-list"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="25"></v-icon>
+                        </template>
+                    </v-card>
+                </v-timeline-item>
+
+                <v-timeline-item class="item">
+                    <v-card
+                        :width="400"
+                        height="170"
+                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
+                        text="A central place for everyone to store their experimental logs and keep track of each other's progress"
+                        title="Write experimental logs"
+                        style="backdrop-filter: blur(10px); background: none"
+                        variant="outlined"
+                        prepend-icon="mdi-beaker"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="25"></v-icon>
+                        </template>
+                    </v-card>
+                </v-timeline-item>
+
+                <v-timeline-item class="item">
+                    <v-card
+                        :width="400"
+                        height="170"
+                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
+                        text="Keep track of your deadlines so you can plan your time wisely and finish your work on time"
+                        title="Keep track of deadlines"
+                        style="backdrop-filter: blur(10px); background: none"
+                        variant="outlined"
+                        prepend-icon="mdi-calendar-alert"
+                    >
+                        <template v-slot:prepend>
+                            <v-icon color="white" size="25"></v-icon>
+                        </template>
+                    </v-card>
                 </v-timeline-item>
             </v-timeline>
         </v-col>
