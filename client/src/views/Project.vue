@@ -44,7 +44,7 @@
                         style="margin-left:15px"
                         v-if="projects[selectedItem]"
                     >
-                        {{ progress }}
+                        {{ progress.toFixed() + '%' }}
                     </v-progress-circular>
 
                     <v-btn
@@ -272,33 +272,33 @@
                         v-model="text"
                         language="en-US"
                         :toolbars="[
-                          'bold',
-                          'underline',
-                          'italic',
-                          '-',
-                          'title',
-                          'strikeThrough',
-                          'sub',
-                          'sup',
-                          'quote',
-                          'unorderedList',
-                          'orderedList',
-                          'task',
-                          '-',
-                          'codeRow',
-                          'code',
-                          'link',
-                          'image',
-                          'table',
-                          'mermaid',
-                          'katex',
-                          '-',
-                          'revoke',
-                          'next',
-                          '=',
-                          'pageFullscreen',
-                          'fullscreen',
-                          'preview',
+                            'bold',
+                            'underline',
+                            'italic',
+                            '-',
+                            'title',
+                            'strikeThrough',
+                            'sub',
+                            'sup',
+                            'quote',
+                            'unorderedList',
+                            'orderedList',
+                            'task',
+                            '-',
+                            'codeRow',
+                            'code',
+                            'link',
+                            'image',
+                            'table',
+                            'mermaid',
+                            'katex',
+                            '-',
+                            'revoke',
+                            'next',
+                            '=',
+                            'pageFullscreen',
+                            'fullscreen',
+                            'preview',
                         ]"
                     ></MdEditor>
                 </v-col>
@@ -372,6 +372,8 @@ const loadProjectData = async function() {
     } else {
         publisher.value = []
     }
+
+    recomputeProgress(-1)
 }
 
 const getTasks = async function () {
