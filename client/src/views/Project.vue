@@ -39,13 +39,14 @@
                         :rotate="360"
                         :size="50"
                         :width="5"
-                        :model-value="projects[selectedItem].progress*100"
+                        v-model="progress"
                         color="primary"
                         style="margin-left:15px"
                         v-if="projects[selectedItem]"
                     >
-                        {{ projects[selectedItem].progress*100 }}
+                        {{ progress }}
                     </v-progress-circular>
+
                     <v-btn
                         color="primary"
                         icon="mdi-plus"
@@ -68,7 +69,7 @@
                             :task="item"
                             :members="members"
                             @showDialog="text = tasks[index].description; title = tasks[index].title; date = new Date(tasks[index].deadline); taskIndex=index; dialog = true"
-                            @completenessChanged="getProjectNames()"
+                            @completenessChanged="recomputeProgress(item.tnumber)"
                             @delete="deleteTask(index)"
                         ></Task>
                     </v-timeline-item>
@@ -242,7 +243,7 @@
                     >
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
-                    <v-toolbar-title>Edit Task</v-toolbar-title>
+                    <v-toolbar-title>{{ taskIndex === -1 ? 'New Task' : 'Edit Task' }}</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-toolbar-items>
                         <v-btn
@@ -339,13 +340,27 @@ const errorDialog: Ref = ref(false)
 const dialog: Ref = ref(false)
 
 const taskIndex: Ref = ref(-1)
-const text: Ref = ref("abcdef\nabcdef\n**asdasdasd**")
-const title: Ref = ref("Expeirmetnal Logs")
+const text: Ref = ref("")
+const title: Ref = ref("")
 
 const date: Ref<Date> = ref(new Date())
 
+const progress: Ref = ref(0)
+
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
+}
+
+const recomputeProgress = function(tnumber: number) {
+    let count = 0
+    let length = 0
+    for (let item of tasks.value) {
+        if (!item.completed && item.tnumber === tnumber) count++
+        else if (item.completed && item.tnumber !== tnumber) count++
+        length++
+    }
+
+    progress.value = count / length * 100
 }
 
 const loadProjectData = async function() {
