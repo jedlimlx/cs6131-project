@@ -41,11 +41,17 @@
                         :width="5"
                         :model-value="projects[selectedItem].progress*100"
                         color="primary"
-                        style="margin-left:10px"
+                        style="margin-left:15px"
                         v-if="projects[selectedItem]"
                     >
                         {{ projects[selectedItem].progress*100 }}
                     </v-progress-circular>
+                    <v-btn
+                        color="primary"
+                        icon="mdi-plus"
+                        @click="text=''; title=''; date=new Date(); taskIndex=-1; dialog=true"
+                        style="margin-left:15px"
+                    ></v-btn>
                 </v-row>
 
                 <v-timeline class="pa-5">
@@ -61,8 +67,9 @@
                         <Task
                             :task="item"
                             :members="members"
-                            @showDialog="dialog = true"
+                            @showDialog="text = tasks[index].description; title = tasks[index].title; date = new Date(tasks[index].deadline); taskIndex=index; dialog = true"
                             @completenessChanged="getProjectNames()"
+                            @delete="deleteTask(index)"
                         ></Task>
                     </v-timeline-item>
 
@@ -240,17 +247,60 @@
                     <v-toolbar-items>
                         <v-btn
                             variant="text"
-                            @click="dialog = false"
+                            @click="dialog = false; editTask(taskIndex)"
                         >
                             Save
                         </v-btn>
                     </v-toolbar-items>
                 </v-toolbar>
 
-                <VMarkdownEditor
-                    v-model="text"
-                    locale="en"
-                ></VMarkdownEditor>
+                <v-col>
+                    <v-row cols="12">
+                        <v-text-field
+                            v-model="title"
+                            label="Enter Title"
+                            variant="outlined"
+                            color="primary"
+                            class="pa-5"
+                            width="100"
+                        ></v-text-field>
+                        <Datepicker v-model="date" style="padding: 30px 10px 10px;width: 400px"/>
+                    </v-row>
+
+                    <MdEditor
+                        v-model="text"
+                        language="en-US"
+                        :toolbars="[
+                          'bold',
+                          'underline',
+                          'italic',
+                          '-',
+                          'title',
+                          'strikeThrough',
+                          'sub',
+                          'sup',
+                          'quote',
+                          'unorderedList',
+                          'orderedList',
+                          'task',
+                          '-',
+                          'codeRow',
+                          'code',
+                          'link',
+                          'image',
+                          'table',
+                          'mermaid',
+                          'katex',
+                          '-',
+                          'revoke',
+                          'next',
+                          '=',
+                          'pageFullscreen',
+                          'fullscreen',
+                          'preview',
+                        ]"
+                    ></MdEditor>
+                </v-col>
             </v-card>
         </v-dialog>
     </v-container>
@@ -262,8 +312,11 @@ import { SERVER } from "@/main"
 import { useUserStore } from "@/store/app"
 import { colour } from "@/colour"
 
-import { VMarkdownEditor } from 'vue3-markdown'
-import 'vue3-markdown/dist/style.css'
+import MdEditor from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+
+import Datepicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 import Task from "@/components/Task.vue"
 
@@ -285,7 +338,11 @@ const errorDialog: Ref = ref(false)
 
 const dialog: Ref = ref(false)
 
+const taskIndex: Ref = ref(-1)
 const text: Ref = ref("abcdef\nabcdef\n**asdasdasd**")
+const title: Ref = ref("Expeirmetnal Logs")
+
+const date: Ref<Date> = ref(new Date())
 
 const getProjectNames = async function () {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
@@ -324,6 +381,55 @@ const deleteMember = async function(uid: Number) {
     } else if (uid == userStore.uid) {  // Cannot delete yourself
         error.value = "You cannot remove yourself from the project!"
         errorDialog.value = true
+    }
+}
+
+function padTo2Digits(num: number) {
+  return num.toString().padStart(2, '0');
+}
+
+function formatDate(date: Date) {
+    return (
+        [
+            date.getFullYear(),
+            padTo2Digits(date.getMonth() + 1),
+            padTo2Digits(date.getDate()),
+            ].join('-') +
+            ' ' +
+        [
+            padTo2Digits(date.getHours()),
+            padTo2Digits(date.getMinutes()),
+            padTo2Digits(date.getSeconds()),
+        ].join(':')
+    );
+}
+
+const deleteTask = async function(index: number) {
+    await fetch(SERVER + "/delete_task/pid="+projects.value[selectedItem.value].pid
+        +"&tnumber="+tasks.value[index].tnumber)
+    delete tasks.value[index]
+}
+
+const editTask = async function(index: number) {
+    let dateString = formatDate(date.value)
+    let b64description = btoa(text.value)
+    if (index === -1) {
+        await fetch(
+            SERVER + "/new_task/pid="+projects.value[selectedItem.value].pid
+            + "&deadline="+dateString
+            + "&title="+title.value
+            + "&description="+b64description
+        )
+        await getTasks()
+    } else {
+        await fetch(
+            SERVER + "/edit_task_details/pid="+projects.value[selectedItem.value].pid
+            + "&tnumber="+tasks.value[index].tnumber
+            + "&deadline="+dateString
+            + "&title="+title.value
+            + "&description="+b64description
+        )
+        await getTasks()
     }
 }
 

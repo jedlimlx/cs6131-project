@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
+    "@vuepic/vue-datepicker": "^4.3.0",
     "@vueuse/core": "^9.13.0",
     "core-js": "^3.8.3",
     "deterministic-random-sequence": "^1.0.6",
+    "marked": "^4.3.0",
     "pinia": "^2.0.23",
     "pinia-plugin-persistedstate": "^3.1.0",
     "roboto-fontface": "*",
@@ -25,6 +27,7 @@
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
+    "@types/markdown-it": "^12.2.3",
     "@types/node": "^18.11.9",
     "@types/webfontloader": "^1.6.35",
     "@vitejs/plugin-vue": "^3.0.3",

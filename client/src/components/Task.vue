@@ -12,8 +12,28 @@
                 @click="updateCompleted(); $emit('completenessChanged')"
             ></v-checkbox>
         </template>
-        <v-card-title class="text-wrap"></v-card-title>
-        <v-card-text class="text-wrap">{{ task.description }}</v-card-text>
+
+        <VMarkdownView
+            mode="light"
+            :content="task.description"
+            style="padding:5px; margin:10px; font-family: 'Montserrat'; font-size:13px; background: #E8F5E9"
+            v-if="task.completed"
+        ></VMarkdownView>
+
+        <VMarkdownView
+            mode="light"
+            :content="task.description"
+            style="padding:5px; margin:10px; font-family: 'Montserrat'; font-size:13px; background: #FFEBEE"
+            v-if="!task.completed && new Date() > new Date(task.deadline)"
+        ></VMarkdownView>
+
+        <VMarkdownView
+            mode="light"
+            :content="task.description"
+            style="padding:5px; margin:10px; font-family: 'Montserrat'; font-size:13px; background: #FFF3E0"
+            v-if="!task.completed && new Date() < new Date(task.deadline)"
+        ></VMarkdownView>
+
         <v-divider></v-divider>
         <v-row class="pa-4">
             <v-chip
@@ -53,7 +73,7 @@
         </v-row>
         <v-divider></v-divider>
         <v-card-actions>
-            <v-btn color="red">
+            <v-btn color="red" @click="$emit('delete')">
                 Delete
             </v-btn>
             <v-spacer></v-spacer>
@@ -68,8 +88,11 @@
 import { SERVER } from "@/main"
 import { colour } from "@/colour"
 
+import { VMarkdownView } from 'vue3-markdown'
+import 'vue3-markdown/dist/style.css'
+
 export default {
-    components: {},
+    components: { VMarkdownView },
     props: ["task", "members"],
     emits: ["showDialog", "completenessChanged", "delete"],
     data() {

@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import secrets
 import urllib.parse
@@ -681,6 +682,56 @@ def remove_assigned(uid, pid, tnumber):
     cursor.execute(f"""
     DELETE FROM assigned 
     WHERE uid=%s AND pid=%s AND tnumber=%s""", (uid,pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/delete_task/pid=<int:pid>&tnumber=<int:tnumber>')
+def delete_task(pid, tnumber):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""
+    DELETE FROM task 
+    WHERE pid=%s AND tnumber=%s""", (pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/edit_task_details/pid=<int:pid>&tnumber=<int:tnumber>&deadline=<string:deadline>&'
+           'title=<string:title>&description=<string:description>')
+def edit_task_details(pid, tnumber, deadline, title, description):
+    description = base64.b64decode(description).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""
+    UPDATE task
+    SET deadline=%s, description=%s, title=%s
+    WHERE pid=%s AND tnumber=%s""", (deadline,description,title,pid,tnumber,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route('/new_task/pid=<int:pid>&deadline=<string:deadline>&'
+           'title=<string:title>&description=<string:description>')
+def add_task(pid, deadline, title, description):
+    description = base64.b64decode(description).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT MAX(tnumber)+1 FROM task WHERE pid=%s""", (pid,)) + 1
+
+    tnumber = cursor.fetchone()[0]
+    cursor.execute(f"""INSERT INTO task VALUES (%s, %s, %s, %s, %s, 0)""", (pid,tnumber,title,description,deadline,))
 
     mysql.connection.commit()
     cursor.close()

@@ -28,7 +28,7 @@
             <v-btn elevation=0 color="white" padding="4" @click="creatingNewAccount = true" v-if="!loggedIn">
                 New Account
             </v-btn>
-            <v-btn elevation=0 color="white" padding="4" @click="userStore.logout(); $router.push('/')" v-if="loggedIn">
+            <v-btn elevation=0 color="white" padding="4" @click="userStore.logout(); passsword = ''; $router.push('/')" v-if="loggedIn">
                 Logout
             </v-btn>
         </v-app-bar>
