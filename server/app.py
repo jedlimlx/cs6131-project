@@ -740,16 +740,90 @@ def add_task(pid, deadline, title, description):
 
 
 # Getting Announcements
+@app.route('/announcements/pid=<int:pid>')
 def get_announcements(pid):
-    pass
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM annoucement WHERE pid=%s """, (pid,))
+    data = cursor.fetchall()
+
+    announcement = [
+        {
+            "announcement": i[1],
+            "time": i[2]
+        } for i in data
+    ]
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(announcement)
 
 
-def make_announcement(pid):
-    pass
+@app.route("/make_announcement/pid=<int:pid>&announcement=<string:announcement>")
+def make_announcement(pid, announcement):
+    announcement = base64.b64decode(announcement).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""INSERT INTO annoucement VALUES (%s,%s,UTC_TIMESTAMP()) """, (pid,announcement,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
 
 
-def delete_announcement(pid):
-    pass
+@app.route("/edit_announcement/pid=<int:pid>&announcement=<string:announcement>&time=<string:time>")
+def edit_announcement(pid, announcement, time):
+    announcement = base64.b64decode(announcement).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""UPDATE annoucement SET annoucement=%s WHERE pid=%s AND time=%s """, (announcement,pid,time))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route("/delete_announcement/pid=<int:pid>&announcement=<string:announcement>&time=<string:time>")
+def delete_announcement(pid, announcement, time):
+    announcement = base64.b64decode(announcement).decode()
+
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"""DELETE FROM annoucement WHERE pid=%s AND time=%s AND annoucement=%s""", (pid,time,announcement,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+# Getting Logs
+@app.route("/logs/pid=<int:pid>")
+def get_logs(pid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM log WHERE pid=%s """, (pid,))
+    data = cursor.fetchall()
+
+    logs = [
+        {
+            "pid": i[0],
+            "tnumber": i[1],
+            "uid": i[2],
+            "title": i[3],
+            "date": i[4],
+            "text": i[5]
+        } for i in data
+    ]
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(logs)
 
 
 # Getting Publishers

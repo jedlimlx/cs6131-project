@@ -28,7 +28,7 @@
                 </v-list>
             </v-menu>
 
-            <v-btn color="black" icon="mdi-bullhorn" @click="" variant="text"></v-btn>
+            <v-btn color="black" icon="mdi-bullhorn" @click="announcementDialog=true" variant="text"></v-btn>
         </v-row>
 
         <v-row class="pt-10">
@@ -115,10 +115,24 @@
 
             <v-col>
                 <v-card
-                    max-width="300"
-                    class="align-left mx-auto"
-                    width="300"
-                    height="300"
+                    class="align-right justify-end"
+                    width="320"
+                    min-height="300"
+                    title="LOGS"
+                    style="margin-bottom:25px"
+                >
+                    <template v-slot:append>
+                        <v-btn
+                            variant="text"
+                            icon=""
+                        >+</v-btn>
+                    </template>
+                </v-card>
+
+                <v-card
+                    class="align-right justify-right"
+                    width="320"
+                    min-height="300"
                     title="MEMBERS"
                 >
                     <template v-slot:append>
@@ -175,6 +189,7 @@
                                             color="primary"
                                             variant="text"
                                             v-bind="menu"
+                                            :disabled="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'member'"
                                         >
                                             {{ item.role }}
                                         </v-btn>
@@ -183,10 +198,12 @@
                                             icon="mdi-trash-can"
                                             elevation="0"
                                             @click="deleteMember(item.uid)"
+                                            v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
                                         >
                                             <v-icon color="red"></v-icon>
                                         </v-btn>
                                     </template>
+
                                     <v-list>
                                         <v-list-item
                                             v-for="(item2, i) in ['Member', 'Lead']"
@@ -221,6 +238,65 @@
                     <v-btn color="primary" text @click="errorDialog = false">
                         Ok
                     </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog
+            v-model="announcementDialog"
+            persistent
+            width="365"
+        >
+            <v-card>
+                <v-card-title class="text-h5">
+                    Announcements
+                </v-card-title>
+                <v-virtual-scroll max-height="300">
+                    <v-list
+                        v-for="(item, index) in announcements"
+                        :key="item.time"
+                        class="pr-5 pl-5"
+                        v-if="announcements.length > 0"
+                        width="355"
+                    >
+                        <v-card>
+                            <v-row class="pa-2">
+                                <v-card-subtitle class="pt-3">{{ item.time }}</v-card-subtitle>
+                                <v-btn
+                                    icon="mdi-pencil" color="transparent" elevation="0" size="small"
+                                    v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
+                                    @click="announcementIndex = index; text = item.announcement; announcementCreationDialog = true"
+                                >
+                                    <v-icon color="primary"></v-icon>
+                                </v-btn>
+                                <v-btn
+                                    icon="mdi-trash-can" color="transparent" elevation="0" size="small"
+                                    v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
+                                    @click="deleteAnnouncement(index)"
+                                >
+                                    <v-icon color="red"></v-icon>
+                                </v-btn>
+                            </v-row>
+                            <VMarkdownView
+                                mode="light"
+                                :content="item.announcement"
+                                style="padding:5px; margin:5px; font-family: 'Montserrat'; font-size:13px"
+                            ></VMarkdownView>
+                        </v-card>
+                    </v-list>
+                </v-virtual-scroll>
+                <v-card-text v-if="announcements.length === 0">No announcements made yet!</v-card-text>
+                <v-card-actions>
+                    <v-btn color="primary" text @click="announcementDialog = false">
+                        Close
+                    </v-btn>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="primary"
+                        text
+                        @click="announcementIndex = -1; announcementCreationDialog = true"
+                        v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
+                    >New</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -304,6 +380,73 @@
                 </v-col>
             </v-card>
         </v-dialog>
+
+        <v-dialog
+            v-model="announcementCreationDialog"
+            fullscreen
+            :scrim="false"
+            transition="dialog-bottom-transition"
+        >
+            <v-card>
+                <v-toolbar
+                    dark
+                    color="primary"
+                >
+                    <v-btn
+                        icon
+                        dark
+                        @click="announcementCreationDialog = false"
+                    >
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>{{ announcementIndex === -1 ? 'New Announcement' : 'Edit Announcement' }}</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-toolbar-items>
+                        <v-btn
+                            variant="text"
+                            @click="announcementCreationDialog = false; editAnnouncement(announcementIndex)"
+                        >
+                            Create
+                        </v-btn>
+                    </v-toolbar-items>
+                </v-toolbar>
+
+                <MdEditor
+                    v-model="text"
+                    language="en-US"
+                    :toolbars="[
+                        'bold',
+                        'underline',
+                        'italic',
+                        '-',
+                        'title',
+                        'strikeThrough',
+                        'sub',
+                        'sup',
+                        'quote',
+                        'unorderedList',
+                        'orderedList',
+                        'task',
+                        '-',
+                        'codeRow',
+                        'code',
+                        'link',
+                        'image',
+                        'table',
+                        'mermaid',
+                        'katex',
+                        '-',
+                        'revoke',
+                        'next',
+                        '=',
+                        'pageFullscreen',
+                        'fullscreen',
+                        'preview',
+                    ]"
+                    class="fill-height"
+                ></MdEditor>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -320,6 +463,10 @@ import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
 import Task from "@/components/Task.vue"
+import Log from "@/components/Log.vue"
+
+import { VMarkdownView } from 'vue3-markdown'
+import 'vue3-markdown/dist/style.css'
 
 const userStore = useUserStore()
 
@@ -347,9 +494,13 @@ const date: Ref<Date> = ref(new Date())
 
 const progress: Ref = ref(0)
 
-const getProjectNames = async function () {
-    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
-}
+const logs: Ref = ref([])
+
+const announcements: Ref = ref([])
+const announcementDialog: Ref = ref(false)
+const announcementCreationDialog: Ref = ref(false)
+
+const announcementIndex: Ref = ref(-1)
 
 const recomputeProgress = function(tnumber: number) {
     let count = 0
@@ -363,6 +514,16 @@ const recomputeProgress = function(tnumber: number) {
     progress.value = count / length * 100
 }
 
+const loadEverything = async function() {
+    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
+    progress.value = projects.value[selectedItem.value].progress * 100
+
+    tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
+    members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+    logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
+    announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+}
+
 const loadProjectData = async function() {
     await getTasks()
     if (projects.value[selectedItem.value].pname != null) {
@@ -373,12 +534,16 @@ const loadProjectData = async function() {
         publisher.value = []
     }
 
-    recomputeProgress(-1)
+    progress.value = projects.value[selectedItem.value].progress * 100
 }
 
 const getTasks = async function () {
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+    logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
+    announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+
+    console.log(announcements.value)
 }
 
 const getPossibleMembers = async function() {
@@ -402,21 +567,21 @@ const deleteMember = async function(uid: Number) {
 }
 
 function padTo2Digits(num: number) {
-  return num.toString().padStart(2, '0');
+    return num.toString().padStart(2, '0');
 }
 
 function formatDate(date: Date) {
     return (
         [
-            date.getFullYear(),
-            padTo2Digits(date.getMonth() + 1),
-            padTo2Digits(date.getDate()),
+            date.getUTCFullYear(),
+            padTo2Digits(date.getUTCMonth() + 1),
+            padTo2Digits(date.getUTCDate()),
             ].join('-') +
             ' ' +
         [
-            padTo2Digits(date.getHours()),
-            padTo2Digits(date.getMinutes()),
-            padTo2Digits(date.getSeconds()),
+            padTo2Digits(date.getUTCHours()),
+            padTo2Digits(date.getUTCMinutes()),
+            padTo2Digits(date.getUTCSeconds()),
         ].join(':')
     );
 }
@@ -450,7 +615,36 @@ const editTask = async function(index: number) {
     }
 }
 
+const editAnnouncement = async function(index: number) {
+    let b64announcement = btoa(text.value)
+    if (index === -1) {
+        await fetch(
+            SERVER + "/make_announcement/pid="+projects.value[selectedItem.value].pid+
+            "&announcement="+b64announcement
+        )
+        await getTasks()
+    } else {
+        let timeString = formatDate(new Date(announcements.value[index].time))
+        await fetch(
+            SERVER + "/edit_announcement/pid="+projects.value[selectedItem.value].pid+
+            "&announcement="+b64announcement+"&time="+timeString
+        )
+        await getTasks()
+    }
+
+}
+
+const deleteAnnouncement = async function(index: number) {
+    let b64announcement = btoa(announcements.value[index].announcement)
+    let timeString = formatDate(new Date(announcements.value[index].time))
+    await fetch(
+        SERVER + "/delete_announcement/pid="+projects.value[selectedItem.value].pid+
+        "&announcement="+b64announcement+"&time="+timeString
+    )
+    await getTasks()
+}
+
 onMounted(() => {
-    getProjectNames()
+    loadEverything()
 })
 </script>
