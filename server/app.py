@@ -588,6 +588,32 @@ def possible_members(username):
     ])
 
 
+@app.route('/suggested_members/uid=<int:uid>')
+def suggested_members(uid):
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""
+    SELECT w.uid, username, COUNT(*) FROM worksOn w, user u WHERE pid IN (
+        SELECT pid FROM project WHERE uid=%s
+    ) AND w.uid = u.uid
+    GROUP BY uid HAVING COUNT(*) >= 1 ORDER BY COUNT(*)""", (uid,))
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    return jsonify([
+        {
+            "uid": x[0],
+            "username": x[1]
+        } for x in data
+    ])
+
+
 # Task Management
 @app.route('/tasks/pid=<int:pid>')
 def get_tasks(pid):
@@ -744,7 +770,7 @@ def add_task(pid, deadline, title, description):
 def get_announcements(pid):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""SELECT * FROM annoucement WHERE pid=%s """, (pid,))
+    cursor.execute(f"""SELECT * FROM annoucement WHERE pid=%s ORDER BY time DESC """, (pid,))
     data = cursor.fetchall()
 
     announcement = [
@@ -806,17 +832,21 @@ def delete_announcement(pid, announcement, time):
 def get_logs(pid):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""SELECT * FROM log WHERE pid=%s """, (pid,))
+    cursor.execute(f"""
+    SELECT log.pid, lnumber, log.uid, user.firstname, title, date, text 
+    FROM log, user WHERE pid=%s AND log.uid=user.uid 
+    ORDER BY date DESC""", (pid,))
     data = cursor.fetchall()
 
     logs = [
         {
             "pid": i[0],
-            "tnumber": i[1],
+            "lnumber": i[1],
             "uid": i[2],
-            "title": i[3],
-            "date": i[4],
-            "text": i[5]
+            "firstname": i[3],
+            "title": i[4],
+            "date": i[5],
+            "text": i[6]
         } for i in data
     ]
 
@@ -824,6 +854,47 @@ def get_logs(pid):
     cursor.close()
 
     return jsonify(logs)
+
+
+@app.route("/edit_log/pid=<int:pid>&lnumber=<int:lnumber>&title=<string:title>&text=<string:text>")
+def edit_log(pid, lnumber, title, text):
+    text = base64.b64decode(text).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""UPDATE log SET title=%s,text=%s WHERE pid=%s AND lnumber=%s""", (title,text,pid,lnumber))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route("/add_log/pid=<int:pid>&uid=<int:uid>&title=<string:title>&text=<string:text>")
+def add_log(pid, uid, title, text):
+    text = base64.b64decode(text).decode()
+
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""INSERT INTO log
+    SELECT %s, MAX(lnumber)+1, %s, %s, UTC_TIMESTAMP(), %s FROM log""", (pid, uid, title, text))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route("/delete_log/pid=<int:pid>&lnumber=<int:lnumber>")
+def delete_log(pid, lnumber):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""DELETE FROM log WHERE pid=%s AND lnumber=%s""", (pid, lnumber))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
 
 
 # Getting Publishers

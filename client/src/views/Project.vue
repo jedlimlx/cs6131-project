@@ -63,7 +63,7 @@
                         'mdi-progress-helper' : 'mdi-progress-alert')"
                     >
                         <template v-slot:opposite>
-                            {{ item.deadline }}
+                            {{ new Date(Date.parse(item.deadline)).toLocaleString() }}
                         </template>
                         <Task
                             :task="item"
@@ -80,7 +80,7 @@
                         icon="mdi-book"
                     >
                         <template v-slot:opposite>
-                            {{ publisher.deadline }}
+                            {{ new Date(Date.parse(publisher.deadline)).toLocaleString() }}
                         </template>
                         <v-card
                             :title="publisher.pname"
@@ -114,21 +114,6 @@
             <v-spacer></v-spacer>
 
             <v-col>
-                <v-card
-                    class="align-right justify-end"
-                    width="320"
-                    min-height="300"
-                    title="LOGS"
-                    style="margin-bottom:25px"
-                >
-                    <template v-slot:append>
-                        <v-btn
-                            variant="text"
-                            icon=""
-                        >+</v-btn>
-                    </template>
-                </v-card>
-
                 <v-card
                     class="align-right justify-right"
                     width="320"
@@ -218,6 +203,70 @@
                         </v-list-item>
                     </v-list>
                 </v-card>
+
+                <v-card
+                    class="align-right justify-end"
+                    width="320"
+                    min-height="300"
+                    title="LOGS"
+                    style="margin-top:25px"
+                >
+                    <template v-slot:append>
+                        <v-btn
+                            variant="text"
+                            icon="mdi-notebook"
+                            @click="logbookOpen = true; editing = false"
+                        ></v-btn>
+                        <v-btn
+                            variant="text"
+                            icon=""
+                            @click="logs.unshift(
+                                {
+                                    'pid': projects[selectedItem].pid,
+                                    'lnumber': Math.max(logs.map(x => x.lnumber)),
+                                    'uid': userStore.uid,
+                                    'firstname': userStore.firstname,
+                                    'title': 'Untitled Log',
+                                    'date': new Date(),
+                                    'text': ''
+                                }
+                            ); shownLogs.unshift(logs[0]); logbookOpen = true; editing = true"
+                        >+</v-btn>
+                    </template>
+
+                    <v-list density="compact">
+                        <v-text-field
+                            v-model="logSearchTerm"
+                            label="Search"
+                            class="pr-5 pl-5"
+                            variant="outlined"
+                            color="primary"
+                            @update:modelValue="shownLogs = logs.filter(x => x.title.toLowerCase().includes(logSearchTerm.toLowerCase()))"
+                        ></v-text-field>
+
+                        <v-list-item>
+                            <v-list-item-subtitle>{{ shownLogs.length + " logs found" }}</v-list-item-subtitle>
+                        </v-list-item>
+
+                        <v-list-item
+                            v-for="(item, i) in shownLogs"
+                            :key="i"
+                            :value="item"
+                            active-color="primary"
+                            @click="logbookPage=logs.map(x => x.lnumber).indexOf(item.lnumber); logbookOpen=true; editing = false"
+                        >
+                            <template v-slot:append>
+                                <v-chip
+                                    :color="colour(item.uid)"
+                                >
+                                    {{ item.firstname }}
+                                </v-chip>
+                            </template>
+                            <v-list-item-title v-text="item.title"></v-list-item-title>
+                            <v-list-item-subtitle v-text="new Date(Date.parse(item.date)).toLocaleString()"></v-list-item-subtitle>
+                        </v-list-item>
+                    </v-list>
+                </v-card>
             </v-col>
         </v-row>
 
@@ -261,7 +310,7 @@
                     >
                         <v-card>
                             <v-row class="pa-2">
-                                <v-card-subtitle class="pt-3">{{ item.time }}</v-card-subtitle>
+                                <v-card-subtitle class="pt-3">{{ new Date(Date.parse(item.time)).toLocaleString() }}</v-card-subtitle>
                                 <v-btn
                                     icon="mdi-pencil" color="transparent" elevation="0" size="small"
                                     v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
@@ -294,7 +343,7 @@
                     <v-btn
                         color="primary"
                         text
-                        @click="announcementIndex = -1; announcementCreationDialog = true"
+                        @click="announcementIndex = -1; text = ''; announcementCreationDialog = true"
                         v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
                     >New</v-btn>
                 </v-card-actions>
@@ -447,6 +496,124 @@
                 ></MdEditor>
             </v-card>
         </v-dialog>
+
+        <v-dialog
+            v-model="logbookOpen"
+            fullscreen
+            :scrim="false"
+            transition="dialog-bottom-transition"
+        >
+            <v-card>
+                <v-toolbar
+                    dark
+                    color="primary"
+                >
+                    <v-btn
+                        icon
+                        dark
+                        @click="logbookOpen = false"
+                    >
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>Virtual Logbook</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-toolbar-items>
+                        <v-btn @click="editing=!editing" v-if="userStore.uid === logs[logbookPage].uid">
+                            <v-icon :icon="editing ? 'mdi-content-save' : 'mdi-pencil'" color="white"></v-icon>
+                        </v-btn>
+                        <v-btn @click="">
+                            <v-icon icon="mdi-trash-can" color="white"></v-icon>
+                        </v-btn>
+                    </v-toolbar-items>
+                </v-toolbar>
+
+                <v-window
+                    v-model="logbookPage"
+                    :show-arrows="false"
+                >
+                    <v-window-item
+                        v-for="(log, index) in logs"
+                        :key="index"
+                    >
+                        <v-card
+                            style="font-family: 'Montserrat'"
+                        >
+                            <template v-slot:append>
+                                <v-chip :color="colour(log.uid)">
+                                    {{ log.firstname }}
+                                </v-chip>
+                            </template>
+                            <template v-slot:title>
+                                <v-card-title
+                                    v-if="!editing"
+                                >{{ log.title }}</v-card-title>
+                                <v-text-field
+                                    v-model="log.title"
+                                    variant="outlined"
+                                    color="primary"
+                                    label="Title"
+                                    v-if="editing"
+                                    class="mt-5"
+                                ></v-text-field>
+                            </template>
+                            <v-card-subtitle>{{ new Date(Date.parse(log.date)).toLocaleString() }}</v-card-subtitle>
+
+                            <MdEditor
+                                previewOnly
+                                class="ma-5"
+                                v-model="log.text"
+                                language="en-US"
+                                v-if="!editing"
+                                style="max-width: 97%; height: 345px !important;"
+                            ></MdEditor>
+
+                            <MdEditor
+                                class="ma-5"
+                                v-model="log.text"
+                                language="en-US"
+                                :toolbars="[
+                                    'bold',
+                                    'underline',
+                                    'italic',
+                                    '-',
+                                    'title',
+                                    'strikeThrough',
+                                    'sub',
+                                    'sup',
+                                    'quote',
+                                    'unorderedList',
+                                    'orderedList',
+                                    'task',
+                                    '-',
+                                    'codeRow',
+                                    'code',
+                                    'link',
+                                    'image',
+                                    'table',
+                                    'mermaid',
+                                    'katex',
+                                    '-',
+                                    'revoke',
+                                    'next',
+                                    '=',
+                                    'pageFullscreen',
+                                    'fullscreen',
+                                    'preview',
+                                ]"
+                                v-if="editing"
+                                style="max-width: 97%; max-height: 290px !important;"
+                            ></MdEditor>
+                        </v-card>
+                    </v-window-item>
+                </v-window>
+                <v-pagination
+                    :length="logs.length-1"
+                    v-model="logbookPage"
+                    class="align-bottom justify-bottom"
+                    @click="editing = false"
+                ></v-pagination>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 
@@ -495,12 +662,18 @@ const date: Ref<Date> = ref(new Date())
 const progress: Ref = ref(0)
 
 const logs: Ref = ref([])
+const shownLogs: Ref = ref([])
 
 const announcements: Ref = ref([])
 const announcementDialog: Ref = ref(false)
 const announcementCreationDialog: Ref = ref(false)
-
 const announcementIndex: Ref = ref(-1)
+
+const logbookOpen: Ref = ref(false)
+const logbookPage: Ref = ref(0)
+const logSearchTerm: Ref = ref("")
+
+const editing: Ref = ref(false)
 
 const recomputeProgress = function(tnumber: number) {
     let count = 0
@@ -521,6 +694,9 @@ const loadEverything = async function() {
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
     logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
+    //@ts-ignore
+    shownLogs.value = logs.value.map(x => x)
+
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
 }
 
@@ -541,9 +717,10 @@ const getTasks = async function () {
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
     logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
-    announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+    //@ts-ignore
+    shownLogs.value = logs.value.map(x => x)
 
-    console.log(announcements.value)
+    announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
 }
 
 const getPossibleMembers = async function() {

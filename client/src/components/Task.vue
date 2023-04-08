@@ -2,7 +2,6 @@
     <v-card
         width="250"
         :color="task.completed ? 'green-lighten-5' : (new Date() < new Date(task.deadline) ? 'orange-lighten-5' : 'red-lighten-5')"
-        :title="task.title"
         class="text-wrap"
     >
         <template v-slot:append>
@@ -11,6 +10,10 @@
                 v-model="task.completed"
                 @click="updateCompleted(); $emit('completenessChanged')"
             ></v-checkbox>
+        </template>
+
+        <template v-slot:title>
+            <v-card-title class="text-wrap">{{ task.title }}</v-card-title>
         </template>
 
         <VMarkdownView
