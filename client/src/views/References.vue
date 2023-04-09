@@ -209,11 +209,13 @@ const addReference = async function() {
 const search = function() {
     references.value = []
     for (const item of allReferences.value) {
-        // @ts-ignore
         if (
+            // @ts-ignore
             item.title.toLowerCase().includes(searchTerm.value.toLowerCase()) &&
+            // @ts-ignore
             (!useJournals.value || journalFilter.value.includes(item.pname)) &&
-            (!useReadFilter || readFilter.value.includes(item.read ? "Read" : "Not Read"))
+            // @ts-ignore
+            (!useReadFilter.value || readFilter.value.includes(item.read ? "Read" : "Not Read"))
         ) {
             references.value.push(item)
         }
