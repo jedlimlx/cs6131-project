@@ -35,7 +35,7 @@
                 </v-col>
             </v-row>
 
-            <v-row align-content="center" justify="center" style="background: none">
+            <v-row align-content="center" justify="center" style="background: none; margin-bottom:300px">
                 <v-tooltip
                     origin="top center"
                     location="top center"
@@ -80,83 +80,85 @@
                 </v-tooltip>
             </v-row>
 
-            <v-timeline>
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="400"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
-                        text="Keep track of all your references - the ones you need to read, the ones you have read, etc."
-                        title="Keep track of references"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                        prepend-icon="mdi-bookshelf"
-                        id="cite"
-                        @scroll="tabValue=1"
-                    >
-                        <template v-slot:prepend>
-                            <v-icon color="white" size="25"></v-icon>
-                        </template>
-                    </v-card>
-                </v-timeline-item>
+            <IntersectionObserver
+                sentinal-name="hello1"
+                @onIntersectionElement="tabValue=1"
+                id="cite"
+            ></IntersectionObserver>
+            <v-card
+                :width="400"
+                height="170"
+                class="text-white spacing-playground pa-5 word-break: break-word mx-auto"
+                text="Keep track of all your references - the ones you need to read, the ones you have read, etc."
+                title="Keep track of references"
+                style="backdrop-filter: blur(10px); background: none; margin-bottom:600px"
+                variant="outlined"
+                @scroll="tabValue=1"
+            >
+                <template v-slot:prepend>
+                    <v-icon color="white" size="25" icon="mdi-bookshelf"></v-icon>
+                </template>
+            </v-card>
 
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="400"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
-                        text="Set deadlines and assign people to do work!"
-                        title="Organise tasks"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                        prepend-icon="mdi-clipboard-list"
-                        id="delegate"
-                        @scroll="tabValue=2"
-                    >
-                        <template v-slot:prepend>
-                            <v-icon color="white" size="25"></v-icon>
-                        </template>
-                    </v-card>
-                </v-timeline-item>
+            <IntersectionObserver
+                sentinal-name="hello2"
+                @onIntersectionElement="tabValue=2"
+                id="delegate"
+            ></IntersectionObserver>
+            <v-card
+                :width="400"
+                height="170"
+                class="text-white spacing-playground pa-5 word-break: break-word mx-auto"
+                text="Set deadlines and assign people to do work!"
+                title="Organise tasks"
+                style="backdrop-filter: blur(10px); background: none; margin-bottom:600px"
+                variant="outlined"
+                @scroll="tabValue=2"
+            >
+                <template v-slot:prepend>
+                    <v-icon color="white" size="25" icon="mdi-clipboard-list"></v-icon>
+                </template>
+            </v-card>
 
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="400"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
-                        text="A central place for everyone to store their experimental logs and keep track of each other's progress"
-                        title="Write experimental logs"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                        prepend-icon="mdi-beaker"
-                        id="log"
-                        @scroll="tabValue=3"
-                    >
-                        <template v-slot:prepend>
-                            <v-icon color="white" size="25"></v-icon>
-                        </template>
-                    </v-card>
-                </v-timeline-item>
+            <IntersectionObserver
+                sentinal-name="hello3"
+                @onIntersectionElement="tabValue=3"
+                id="log"
+            ></IntersectionObserver>
+            <v-card
+                :width="400"
+                height="170"
+                class="text-white spacing-playground pa-5 word-break: break-word mx-auto"
+                text="A central place for everyone to store their experimental logs and keep track of each other's progress"
+                title="Write experimental logs"
+                style="backdrop-filter: blur(10px); background: none; margin-bottom:600px"
+                variant="outlined"
+                @scroll="tabValue=3"
+            >
+                <template v-slot:prepend>
+                    <v-icon color="white" size="25" icon="mdi-beaker"></v-icon>
+                </template>
+            </v-card>
 
-                <v-timeline-item class="item">
-                    <v-card
-                        :width="400"
-                        height="170"
-                        class="text-white spacing-playground pa-5 ma-5 word-break: break-word mx-auto"
-                        text="Keep track of your deadlines so you can plan your time wisely and finish your work on time"
-                        title="Keep track of deadlines"
-                        style="backdrop-filter: blur(10px); background: none"
-                        variant="outlined"
-                        prepend-icon="mdi-calendar-alert"
-                        id="deadlines"
-                        @scroll="tabValue=4"
-                    >
-                        <template v-slot:prepend>
-                            <v-icon color="white" size="25"></v-icon>
-                        </template>
-                    </v-card>
-                </v-timeline-item>
-            </v-timeline>
+            <IntersectionObserver
+                sentinal-name="hello4"
+                @onIntersectionElement="tabValue=4"
+                id="deadlines"
+            ></IntersectionObserver>
+            <v-card
+                :width="400"
+                height="170"
+                class="text-white spacing-playground pa-5 word-break: break-word mx-auto"
+                text="Keep track of your deadlines so you can plan your time wisely and finish your work on time"
+                title="Keep track of deadlines"
+                style="backdrop-filter: blur(10px); background: none"
+                variant="outlined"
+                @scroll="tabValue=4"
+            >
+                <template v-slot:prepend>
+                    <v-icon color="white" size="25" icon="mdi-calendar-alert"></v-icon>
+                </template>
+            </v-card>
         </v-col>
     </v-container>
 </template>
@@ -164,6 +166,7 @@
 <script lang="ts" setup>
 import { useUserStore } from "@/store/app"
 import { Ref, ref } from "vue";
+import IntersectionObserver from "@/components/IntersectionObserver.vue";
 const userStore = useUserStore()
 
 const tooltipShow: Ref = ref(true)
@@ -182,9 +185,5 @@ const scroll = function(id: string) {
 .hero {
     background: url('public/picture.jpg') no-repeat center center fixed !important;
     background-size: cover;
-}
-
-.item {
-    margin: 3000px
 }
 </style>

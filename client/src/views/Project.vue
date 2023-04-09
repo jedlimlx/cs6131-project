@@ -588,9 +588,7 @@
                         v-for="(log, index) in logs"
                         :key="index"
                     >
-                        <v-card
-                            style="font-family: 'Montserrat'"
-                        >
+                        <v-card style="font-family: 'Montserrat'">
                             <template v-slot:append>
                                 <v-chip :color="colour(log.uid)">
                                     {{ log.firstname }}
