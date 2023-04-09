@@ -595,9 +595,9 @@ def suggested_members(uid):
     # Executing SQL Statements
     cursor.execute(f"""
     SELECT w.uid, username, COUNT(*) FROM worksOn w, user u WHERE pid IN (
-        SELECT pid FROM project WHERE uid=%s
+        SELECT pid FROM worksOn WHERE uid=%s
     ) AND w.uid = u.uid
-    GROUP BY uid HAVING COUNT(*) >= 1 ORDER BY COUNT(*)""", (uid,))
+    GROUP BY uid HAVING COUNT(*) >= 1 AND uid != %s ORDER BY COUNT(*) DESC LIMIT 2""", (uid,uid,))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB

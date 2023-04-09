@@ -174,7 +174,16 @@
                                     v-bind="props"
                                 >+</v-btn>
                             </template>
-                            <v-list>
+                            <v-list density="compact">
+                                <v-list-subheader>SUGGESTIONS</v-list-subheader>
+                                <v-list-item
+                                    v-for="(item2, i) in suggestedMembers"
+                                    :key="i"
+                                    :value="item2"
+                                    :title="item2.username"
+                                    @click="addMember(item2.uid); menu2 = false"
+                                ></v-list-item>
+                                <v-divider></v-divider>
                                 <v-text-field
                                     v-model="possibleUsername"
                                     class="pa-5 rounded-pill"
@@ -689,6 +698,7 @@ const members: Ref = ref([])
 
 const possibleUsername: Ref = ref([])
 const possibleMembers: Ref = ref([])
+const suggestedMembers: Ref = ref([])
 
 const menu2: Ref = ref(false)
 
@@ -754,6 +764,8 @@ const loadEverything = async function() {
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
 
     journals.value = await (await fetch(SERVER + "/publishers")).json()
+
+    suggestedMembers.value = await (await fetch(SERVER + '/suggested_members/uid='+userStore.uid)).json()
 }
 
 const loadProjectData = async function() {
