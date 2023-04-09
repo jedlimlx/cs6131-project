@@ -46,20 +46,19 @@
                 :value="index"
                 :color="colourUid(item.uid)"
                 class="ma-2"
-                closable
+                :closable="lead"
                 @click:close="removeAssigned(members[index].uid)"
             >
                 {{ item.firstname }}
             </v-chip>
 
-            <v-menu>
+            <v-menu v-if="lead">
                 <template v-slot:activator="{ props }">
                     <v-chip
                         color="primary"
                         class="ma-2"
                         v-bind="props"
-                    >+
-                    </v-chip>
+                    >+</v-chip>
                 </template>
                 <v-list>
                     <v-list-item
@@ -74,8 +73,8 @@
                 </v-list>
             </v-menu>
         </v-row>
-        <v-divider></v-divider>
-        <v-card-actions>
+        <v-divider v-if="lead"></v-divider>
+        <v-card-actions v-if="lead">
             <v-btn color="red" @click="$emit('delete')">
                 Delete
             </v-btn>
@@ -96,7 +95,7 @@ import 'vue3-markdown/dist/style.css'
 
 export default {
     components: { VMarkdownView },
-    props: ["task", "members"],
+    props: ["task", "members", "lead"],
     emits: ["showDialog", "completenessChanged", "delete"],
     data() {
         return {
@@ -154,6 +153,8 @@ export default {
         }
     },
     updated() {
+        console.log(this.lead)
+
         // @ts-ignore
         this.f(this.task.pid, this.task.tnumber)
     }

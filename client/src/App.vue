@@ -307,22 +307,16 @@ const routes = [
         component: Profile,
     },
     {
-        name: "References",
-        path: "/references",
-        icon: "mdi-book",
-        component: References,
-    },
-    {
         name: "Projects",
         path: "/projects",
         icon: "mdi-test-tube",
         component: Project,
     },
     {
-        name: "Give Feedback",
-        path: "/feedback",
-        icon: "mdi-message-alert",
-        component: Feedback,
+        name: "References",
+        path: "/references",
+        icon: "mdi-book",
+        component: References,
     }
 ]
 

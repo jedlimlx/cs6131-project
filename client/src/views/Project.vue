@@ -68,6 +68,7 @@
                         <Task
                             :task="item"
                             :members="members"
+                            :lead="lead"
                             @showDialog="text = tasks[index].description; title = tasks[index].title; date = new Date(tasks[index].deadline); taskIndex=index; dialog = true"
                             @completenessChanged="recomputeProgress(item.tnumber)"
                             @delete="deleteTask(index)"
@@ -83,12 +84,16 @@
                             {{ new Date(Date.parse(publisher.deadline)).toLocaleString() }}
                         </template>
                         <v-card
-                            :title="publisher.pname"
                             :subtitle="publisher.website"
                             :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
                             width="250"
                             class="text-wrap"
                         >
+                            <template v-slot:title>
+                                <v-card-title class="text-wrap">
+                                    {{ publisher.pname }}
+                                </v-card-title>
+                            </template>
                             <v-card-actions>
                                 <v-btn @click="publisher = []; updatePublisher()" color="primary">Remove Goal</v-btn>
                                 <v-spacer></v-spacer>
@@ -224,7 +229,7 @@
                                             color="primary"
                                             variant="text"
                                             v-bind="menu"
-                                            :disabled="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'member'"
+                                            :disabled="!lead"
                                         >
                                             {{ item.role }}
                                         </v-btn>
@@ -233,7 +238,7 @@
                                             icon="mdi-trash-can"
                                             elevation="0"
                                             @click="deleteMember(item.uid)"
-                                            v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
+                                            v-if="lead"
                                         >
                                             <v-icon color="red"></v-icon>
                                         </v-btn>
@@ -363,14 +368,12 @@
                                 <v-card-subtitle class="pt-3">{{ new Date(Date.parse(item.time)).toLocaleString() }}</v-card-subtitle>
                                 <v-btn
                                     icon="mdi-pencil" color="transparent" elevation="0" size="small"
-                                    v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
                                     @click="announcementIndex = index; text = item.announcement; announcementCreationDialog = true"
                                 >
                                     <v-icon color="primary"></v-icon>
                                 </v-btn>
                                 <v-btn
                                     icon="mdi-trash-can" color="transparent" elevation="0" size="small"
-                                    v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
                                     @click="deleteAnnouncement(index)"
                                 >
                                     <v-icon color="red"></v-icon>
@@ -465,7 +468,6 @@
                             'link',
                             'image',
                             'table',
-                            'mermaid',
                             'katex',
                             '-',
                             'revoke',
@@ -532,7 +534,6 @@
                         'link',
                         'image',
                         'table',
-                        'mermaid',
                         'katex',
                         '-',
                         'revoke',
@@ -730,6 +731,8 @@ const selectedPublisher: Ref = ref([])
 
 const editing: Ref = ref(false)
 
+const lead: Ref = ref(false)
+
 const recomputeProgress = function(tnumber: number) {
     let count = 0
     let length = 0
@@ -764,6 +767,8 @@ const loadEverything = async function() {
     journals.value = await (await fetch(SERVER + "/publishers")).json()
 
     suggestedMembers.value = await (await fetch(SERVER + '/suggested_members/uid='+userStore.uid)).json()
+
+    lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
 }
 
 const loadProjectData = async function() {
@@ -783,10 +788,13 @@ const getTasks = async function () {
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
     logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
+
     //@ts-ignore
     shownLogs.value = logs.value.map(x => x)
 
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+
+    lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
 }
 
 const getPossibleMembers = async function() {
