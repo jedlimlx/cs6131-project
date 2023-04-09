@@ -64,15 +64,16 @@
                             @click="tooltipShow=true"
                         >
                             <v-tabs
+                                v-model="tabValue"
                                 color="secondary"
                                 align-tabs="center"
                                 class="text-white"
                                 style="backdrop-filter: blur(10px); background:none"
                             >
-                                <v-tab :value="1">Cite</v-tab>
-                                <v-tab :value="2">Delegate</v-tab>
-                                <v-tab :value="3">Log</v-tab>
-                                <v-tab :value="4">Deadlines</v-tab>
+                                <v-tab :value="1" @click="scroll('cite')">Cite</v-tab>
+                                <v-tab :value="2" @click="scroll('delegate')">Delegate</v-tab>
+                                <v-tab :value="3" @click="scroll('log')">Log</v-tab>
+                                <v-tab :value="4" @click="scroll('deadlines')">Deadlines</v-tab>
                             </v-tabs>
                         </v-card>
                     </template>
@@ -90,6 +91,8 @@
                         style="backdrop-filter: blur(10px); background: none"
                         variant="outlined"
                         prepend-icon="mdi-bookshelf"
+                        id="cite"
+                        @scroll="tabValue=1"
                     >
                         <template v-slot:prepend>
                             <v-icon color="white" size="25"></v-icon>
@@ -107,6 +110,8 @@
                         style="backdrop-filter: blur(10px); background: none"
                         variant="outlined"
                         prepend-icon="mdi-clipboard-list"
+                        id="delegate"
+                        @scroll="tabValue=2"
                     >
                         <template v-slot:prepend>
                             <v-icon color="white" size="25"></v-icon>
@@ -124,6 +129,8 @@
                         style="backdrop-filter: blur(10px); background: none"
                         variant="outlined"
                         prepend-icon="mdi-beaker"
+                        id="log"
+                        @scroll="tabValue=3"
                     >
                         <template v-slot:prepend>
                             <v-icon color="white" size="25"></v-icon>
@@ -141,6 +148,8 @@
                         style="backdrop-filter: blur(10px); background: none"
                         variant="outlined"
                         prepend-icon="mdi-calendar-alert"
+                        id="deadlines"
+                        @scroll="tabValue=4"
                     >
                         <template v-slot:prepend>
                             <v-icon color="white" size="25"></v-icon>
@@ -158,6 +167,15 @@ import { Ref, ref } from "vue";
 const userStore = useUserStore()
 
 const tooltipShow: Ref = ref(true)
+
+const tabValue: Ref = ref(0)
+
+const scroll = function(id: string) {
+    //@ts-ignore
+    document.getElementById(id).scrollIntoView({
+        behavior: 'smooth'
+    })
+}
 </script>
 
 <style scoped lang="scss">
