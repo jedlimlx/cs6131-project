@@ -87,9 +87,14 @@
                             :subtitle="publisher.website"
                             :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
                             width="250"
-                            :href="publisher.website"
                             class="text-wrap"
-                        ></v-card>
+                        >
+                            <v-card-actions>
+                                <v-btn @click="publisher = []; updatePublisher()" color="primary">Remove Goal</v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn icon="mdi-link" :href="publisher.website"></v-btn>
+                            </v-card-actions>
+                        </v-card>
                     </v-timeline-item>
 
                     <v-timeline-item
@@ -104,9 +109,45 @@
                             :title="publisher.pname"
                             :subtitle="publisher.website"
                             width="250"
-                            :href="publisher.website"
                             class="text-wrap"
-                        ></v-card>
+                        >
+                            <v-card-actions>
+                                <v-btn @click="publisher = []; updatePublisher()" color="primary">Remove Goal</v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn icon="mdi-link" :href="publisher.website"></v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-timeline-item>
+
+                    <v-timeline-item
+                        v-if="publisher.length === 0"
+                        dot-color="black"
+                        icon="mdi-book"
+                    >
+                        <template v-slot:opposite>
+                            Add a publication goal?
+                        </template>
+                        <v-card
+                            title="Add a Publisher"
+                            width="250"
+                            class="text-wrap"
+                        >
+                            <v-combobox
+                                v-model="selectedPublisher"
+                                label="Publisher"
+                                color="primary"
+                                item-title="pname"
+                                item-value="pname"
+                                :items="journals"
+                                class="pa-5"
+                            ></v-combobox>
+                            <v-card-actions>
+                                <v-btn
+                                    @click="publisher = selectedPublisher; updatePublisher()"
+                                    color="primary"
+                                >Confirm</v-btn>
+                            </v-card-actions>
+                        </v-card>
                     </v-timeline-item>
                 </v-timeline>
             </v-virtual-scroll>
@@ -223,14 +264,14 @@
                             @click="logs.unshift(
                                 {
                                     'pid': projects[selectedItem].pid,
-                                    'lnumber': Math.max(logs.map(x => x.lnumber)),
+                                    'lnumber': Math.max.apply(Math, logs.map(x => x.lnumber))+1,
                                     'uid': userStore.uid,
                                     'firstname': userStore.firstname,
                                     'title': 'Untitled Log',
                                     'date': new Date(),
                                     'text': ''
                                 }
-                            ); shownLogs.unshift(logs[0]); logbookOpen = true; editing = true"
+                            ); shownLogs.unshift(logs[0]); logbookPage = 1; text = 'Write your log here.'; title = 'Untitled Log'; addLog(); logbookOpen = true; editing = true"
                         >+</v-btn>
                     </template>
 
@@ -253,7 +294,7 @@
                             :key="i"
                             :value="item"
                             active-color="primary"
-                            @click="logbookPage=logs.map(x => x.lnumber).indexOf(item.lnumber); logbookOpen=true; editing = false"
+                            @click="logbookPage=logs.map(x => x.lnumber).indexOf(item.lnumber)+1; logbookOpen=true; editing = false"
                         >
                             <template v-slot:append>
                                 <v-chip
@@ -518,17 +559,20 @@
                     <v-toolbar-title>Virtual Logbook</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-toolbar-items>
-                        <v-btn @click="editing=!editing" v-if="userStore.uid === logs[logbookPage].uid">
+                        <v-btn
+                            @click="editLog(logbookPage-1); editing=!editing"
+                            v-if="userStore.uid === logs[logbookPage-1].uid"
+                        >
                             <v-icon :icon="editing ? 'mdi-content-save' : 'mdi-pencil'" color="white"></v-icon>
                         </v-btn>
-                        <v-btn @click="">
+                        <v-btn @click="deleteLog(logbookPage-1); logbookPage=Math.min(logbookPage,logs.length)">
                             <v-icon icon="mdi-trash-can" color="white"></v-icon>
                         </v-btn>
                     </v-toolbar-items>
                 </v-toolbar>
 
                 <v-window
-                    v-model="logbookPage"
+                    :model-value="logbookPage-1"
                     :show-arrows="false"
                 >
                     <v-window-item
@@ -548,7 +592,7 @@
                                     v-if="!editing"
                                 >{{ log.title }}</v-card-title>
                                 <v-text-field
-                                    v-model="log.title"
+                                    v-model="title"
                                     variant="outlined"
                                     color="primary"
                                     label="Title"
@@ -569,7 +613,7 @@
 
                             <MdEditor
                                 class="ma-5"
-                                v-model="log.text"
+                                v-model="text"
                                 language="en-US"
                                 :toolbars="[
                                     'bold',
@@ -607,10 +651,10 @@
                     </v-window-item>
                 </v-window>
                 <v-pagination
-                    :length="logs.length-1"
+                    :length="logs.length"
                     v-model="logbookPage"
                     class="align-bottom justify-bottom"
-                    @click="editing = false"
+                    @click="editLog(logbookPage); editing = false"
                 ></v-pagination>
             </v-card>
         </v-dialog>
@@ -670,8 +714,11 @@ const announcementCreationDialog: Ref = ref(false)
 const announcementIndex: Ref = ref(-1)
 
 const logbookOpen: Ref = ref(false)
-const logbookPage: Ref = ref(0)
+const logbookPage: Ref = ref(1)
 const logSearchTerm: Ref = ref("")
+
+const journals: Ref = ref([])
+const selectedPublisher: Ref = ref([])
 
 const editing: Ref = ref(false)
 
@@ -690,6 +737,13 @@ const recomputeProgress = function(tnumber: number) {
 const loadEverything = async function() {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
     progress.value = projects.value[selectedItem.value].progress * 100
+    if (projects.value[selectedItem.value].pname != null) {
+        publisher.value = await (await fetch(
+            SERVER + "/publisher/pname=" + projects.value[selectedItem.value].pname
+        )).json()
+    } else {
+        publisher.value = []
+    }
 
     tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
     members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
@@ -698,6 +752,8 @@ const loadEverything = async function() {
     shownLogs.value = logs.value.map(x => x)
 
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+
+    journals.value = await (await fetch(SERVER + "/publishers")).json()
 }
 
 const loadProjectData = async function() {
@@ -808,7 +864,6 @@ const editAnnouncement = async function(index: number) {
         )
         await getTasks()
     }
-
 }
 
 const deleteAnnouncement = async function(index: number) {
@@ -820,6 +875,59 @@ const deleteAnnouncement = async function(index: number) {
     )
     await getTasks()
 }
+
+const addLog = async function() {
+    logs.value[0].title = title.value
+    logs.value[0].text = text.value
+
+    let b64log = btoa(text.value)
+    await fetch(
+        SERVER + "/add_log/pid="+projects.value[selectedItem.value].pid+"&uid="+userStore.uid+
+        "&title="+title.value+"&text="+b64log
+    )
+}
+
+const editLog = async function(index: number) {
+    if (editing.value) {
+        logs.value[index].title = title.value
+        logs.value[index].text = text.value
+
+        let b64log = btoa(text.value)
+        await fetch(
+            SERVER + "/edit_log/pid="+projects.value[selectedItem.value].pid+"&lnumber="+logs.value[index].lnumber+
+            "&title="+title.value+"&text="+b64log
+        )
+    } else {
+        title.value = logs.value[index].title
+        text.value = logs.value[index].text
+    }
+}
+
+const deleteLog = async function(index: number) {
+    await fetch(
+        SERVER + "/delete_log/pid="+projects.value[selectedItem.value].pid+"&lnumber="+logs.value[index].lnumber
+    )
+    logs.value.splice(index, 1)
+    logSearchTerm.value = ""
+    // ts-ignore
+    shownLogs.value = logs.value.map(x => x)
+}
+
+const updatePublisher = async function() {
+    if (publisher.value.length == 0) {
+        await fetch(
+            SERVER + "/update_publisher/pname=NULL&pid="+projects.value[selectedItem.value].pid
+        )
+    } else {
+        await fetch(
+            SERVER + "/update_publisher/pname="+publisher.value.pname+"&pid="+projects.value[selectedItem.value].pid
+        )
+    }
+}
+
+
+const print = function(x: any) { console.log(x) }
+
 
 onMounted(() => {
     loadEverything()

@@ -920,5 +920,18 @@ def get_publishers():
     return publishers
 
 
+@app.route("/update_publisher/pname=<string:pname>&pid=<int:pid>")
+def update_publisher(pname, pid):
+    cursor = mysql.connection.cursor()
+
+    if pname == "NULL": pname = None
+    cursor.execute(f"""UPDATE project SET pname=%s WHERE pid=%s""", (pname,pid))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
 if __name__ == '__main__':
     app.run()
