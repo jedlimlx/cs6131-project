@@ -2,7 +2,7 @@
     <v-container fill-height>
         <v-row class="pb-10 pt-10">
             <div class="text-h3 pr-6">Project</div>
-            <v-btn color="primary" icon="mdi-plus" @click=""></v-btn>
+            <v-btn color="primary" icon="mdi-plus" @click="editedTitle = ''; newProject = true; editTitleDialog=true"></v-btn>
         </v-row>
 
         <v-row>
@@ -28,6 +28,8 @@
                 </v-list>
             </v-menu>
 
+            <v-btn color="black" icon="mdi-pencil" @click="editedTitle = projects[selectedItem].name; newProject = false; editTitleDialog=true" variant="text" v-if="lead"></v-btn>
+            <v-btn color="black" icon="mdi-trash-can" @click="deleteProject()" variant="text" v-if="lead"></v-btn>
             <v-btn color="black" icon="mdi-bullhorn" @click="announcementDialog=true" variant="text"></v-btn>
         </v-row>
 
@@ -721,6 +723,37 @@
             </v-card>
         </v-dialog>
 
+        <v-row justify="center">
+            <v-dialog
+                v-model="editTitleDialog"
+                persistent
+                max-width="900"
+            >
+                <v-card>
+                    <v-card-title class="text-h5">
+                        {{ newProject ? 'New Project' : 'Edit Title' }}
+                    </v-card-title>
+                    <v-card-text>
+                        <v-text-field
+                            v-model="editedTitle"
+                            label="Enter Title"
+                            variant="outlined"
+                            color="primary"
+                        ></v-text-field>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-btn color="primary" text @click="editTitleDialog = false">
+                            Cancel
+                        </v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" text @click="editTitleDialog = false; (newProject ? createProject() : editTitle())">
+                            Confirm
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+        </v-row>
+
         <ReferenceDialog
             ref="refDialog"
             @addReference="addReference"
@@ -800,6 +833,10 @@ const shownReferences: Ref = ref([])
 const refDialog = ref(null)
 const referencesSearchTerm = ref("")
 
+const editTitleDialog = ref(false)
+const editedTitle = ref("")
+const newProject = ref(false)
+
 const recomputeProgress = function(tnumber: number) {
     let count = 0
     let length = 0
@@ -863,6 +900,9 @@ const getTasks = async function () {
 
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
     references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
+
+    //@ts-ignore
+    shownReferences.value = references.value.map(x => x)
 
     lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
 }
@@ -1013,7 +1053,6 @@ const updatePublisher = async function() {
     }
 }
 
-
 const addReference = async function() {
     // @ts-ignore
     let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replaceAll("/", "$2F")+
@@ -1027,15 +1066,29 @@ const addReference = async function() {
     references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
 }
 
-const deleteReference = function(item: object) {
+const deleteReference = async function(item: object) {
     //@ts-ignore
-    fetch(SERVER + "/delete_reference/doi=\""+item.doi.replaceAll("/", "$2F")+"&pid="+projects.value[selectedItem.value].pid)
+    await fetch(SERVER + "/delete_reference/doi=\""+item.doi.replaceAll("/", "$2F")+"&pid="+projects.value[selectedItem.value].pid)
+    //@ts-ignore
     references.value = references.value.filter(i => i !== item)
 }
 
+const editTitle = async function() {
+    projects.value[selectedItem.value].name = editedTitle.value
+    await fetch(SERVER + "/edit_title/pid="+projects.value[selectedItem.value].pid+"&title="+editedTitle.value)
+}
+
+const createProject = async function() {
+    projects.value.push(await (await fetch(SERVER + "/new_project/title="+editedTitle.value+"&uid="+userStore.uid)).json())
+}
+
+const deleteProject = async function() {
+    await fetch(SERVER + "/delete_project/pid="+projects.value[selectedItem.value].pid)
+    projects.value.splice(selectedItem.value, 1)
+    selectedItem.value = Math.min(selectedItem.value, projects.value.length-1)
+}
 
 const print = function(x: any) { console.log(x) }
-
 
 onMounted(() => {
     loadEverything()

@@ -12,7 +12,6 @@ from apl import scrape_apl
 from cambridge import scrape_cambridge
 from nature import scrape_nature
 
-
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -248,7 +247,7 @@ def search_reference(query):
     cursor = mysql.connection.cursor()
 
     # Executing SQL Statements
-    cursor.execute(f"""SELECT doi FROM reference WHERE title LIKE %s """, ("%"+query+"%",))
+    cursor.execute(f"""SELECT doi FROM reference WHERE title LIKE %s """, ("%" + query + "%",))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB
@@ -337,7 +336,7 @@ def add_reference(doi, uid, read):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""INSERT INTO isRead VALUES (%s, %s, %s) """, (doi,uid,read,))
+        cursor.execute(f"""INSERT INTO isRead VALUES (%s, %s, %s) """, (doi, uid, read,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -364,7 +363,7 @@ def add_reference_2(doi, pid):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""INSERT INTO cited VALUES (%s, %s) """, (doi,pid,))
+        cursor.execute(f"""INSERT INTO cited VALUES (%s, %s) """, (doi, pid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -391,7 +390,7 @@ def update_read(uid, doi, read):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""UPDATE isRead SET hasRead=%s WHERE doi=%s AND uid=%s; """, (read,doi,uid,))
+        cursor.execute(f"""UPDATE isRead SET hasRead=%s WHERE doi=%s AND uid=%s; """, (read, doi, uid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -417,7 +416,7 @@ def delete_reference_1(doi, uid):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""DELETE FROM isRead WHERE doi=%s AND uid=%s; """, (doi,uid,))
+        cursor.execute(f"""DELETE FROM isRead WHERE doi=%s AND uid=%s; """, (doi, uid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -443,7 +442,7 @@ def delete_reference_2(doi, pid):
         doi = doi.replace("$", "%").replace("\"", "")
         doi = urllib.parse.unquote(doi)
         check_doi(doi, cursor)
-        cursor.execute(f"""DELETE FROM cited WHERE doi=%s AND pid=%s; """, (doi,pid,))
+        cursor.execute(f"""DELETE FROM cited WHERE doi=%s AND pid=%s; """, (doi, pid,))
 
         # Saving the actions performed on the DB
         mysql.connection.commit()
@@ -536,7 +535,7 @@ def get_members(pid):
 @app.route('/add_members/pid=<int:pid>&uid=<int:uid>&role=<string:role>')
 def add_members(pid, uid, role):
     cursor = mysql.connection.cursor()
-    cursor.execute(f"""INSERT INTO worksOn VALUES (%s,%s,%s)""", (uid,pid,role))
+    cursor.execute(f"""INSERT INTO worksOn VALUES (%s,%s,%s)""", (uid, pid, role))
 
     mysql.connection.commit()
     cursor.close()
@@ -547,7 +546,7 @@ def add_members(pid, uid, role):
 @app.route('/remove_members/pid=<int:pid>&uid=<int:uid>')
 def remove_members(pid, uid):
     cursor = mysql.connection.cursor()
-    cursor.execute(f"""DELETE FROM worksOn WHERE pid=%s AND uid=%s""", (pid,uid,))
+    cursor.execute(f"""DELETE FROM worksOn WHERE pid=%s AND uid=%s""", (pid, uid,))
 
     mysql.connection.commit()
     cursor.close()
@@ -558,7 +557,7 @@ def remove_members(pid, uid):
 @app.route('/change_role/pid=<int:pid>&uid=<int:uid>&role=<string:role>')
 def change_role(pid, uid, role):
     cursor = mysql.connection.cursor()
-    cursor.execute(f"""UPDATE worksOn SET role=%s WHERE uid=%s AND pid=%s""", (role,uid,pid,))
+    cursor.execute(f"""UPDATE worksOn SET role=%s WHERE uid=%s AND pid=%s""", (role, uid, pid,))
 
     mysql.connection.commit()
     cursor.close()
@@ -571,7 +570,7 @@ def possible_members(username):
     cursor = mysql.connection.cursor()
 
     # Executing SQL Statements
-    cursor.execute(f"""SELECT uid, username FROM user WHERE username LIKE %s """, ("%"+username+"%",))
+    cursor.execute(f"""SELECT uid, username FROM user WHERE username LIKE %s """, ("%" + username + "%",))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB
@@ -597,7 +596,7 @@ def suggested_members(uid):
     SELECT w.uid, username, COUNT(*) FROM worksOn w, user u WHERE pid IN (
         SELECT pid FROM worksOn WHERE uid=%s
     ) AND w.uid = u.uid
-    GROUP BY uid HAVING COUNT(*) >= 1 AND uid != %s ORDER BY COUNT(*) DESC LIMIT 2""", (uid,uid,))
+    GROUP BY uid HAVING COUNT(*) >= 1 AND uid != %s ORDER BY COUNT(*) DESC LIMIT 2""", (uid, uid,))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB
@@ -655,7 +654,7 @@ def get_assigned(pid, tnumber):
     cursor.execute(f"""
     SELECT u.uid, u.firstname, u.username 
     FROM assigned a, user u 
-    WHERE a.pid=%s AND a.tnumber=%s AND a.uid = u.uid """, (pid,tnumber,))
+    WHERE a.pid=%s AND a.tnumber=%s AND a.uid = u.uid """, (pid, tnumber,))
     data = cursor.fetchall()
 
     assigned = []
@@ -681,7 +680,7 @@ def task_completed(pid, tnumber, completed):
     cursor.execute(f"""
     UPDATE task
     SET completed=%s 
-    WHERE pid=%s AND tnumber=%s """, (completed,pid,tnumber,))
+    WHERE pid=%s AND tnumber=%s """, (completed, pid, tnumber,))
 
     mysql.connection.commit()
     cursor.close()
@@ -693,7 +692,7 @@ def task_completed(pid, tnumber, completed):
 def add_assigned(uid, pid, tnumber):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""INSERT INTO assigned VALUES (%s,%s,%s)""", (uid,pid,tnumber,))
+    cursor.execute(f"""INSERT INTO assigned VALUES (%s,%s,%s)""", (uid, pid, tnumber,))
 
     mysql.connection.commit()
     cursor.close()
@@ -707,7 +706,7 @@ def remove_assigned(uid, pid, tnumber):
 
     cursor.execute(f"""
     DELETE FROM assigned 
-    WHERE uid=%s AND pid=%s AND tnumber=%s""", (uid,pid,tnumber,))
+    WHERE uid=%s AND pid=%s AND tnumber=%s""", (uid, pid, tnumber,))
 
     mysql.connection.commit()
     cursor.close()
@@ -721,7 +720,7 @@ def delete_task(pid, tnumber):
 
     cursor.execute(f"""
     DELETE FROM task 
-    WHERE pid=%s AND tnumber=%s""", (pid,tnumber,))
+    WHERE pid=%s AND tnumber=%s""", (pid, tnumber,))
 
     mysql.connection.commit()
     cursor.close()
@@ -739,7 +738,7 @@ def edit_task_details(pid, tnumber, deadline, title, description):
     cursor.execute(f"""
     UPDATE task
     SET deadline=%s, description=%s, title=%s
-    WHERE pid=%s AND tnumber=%s""", (deadline,description,title,pid,tnumber,))
+    WHERE pid=%s AND tnumber=%s""", (deadline, description, title, pid, tnumber,))
 
     mysql.connection.commit()
     cursor.close()
@@ -757,7 +756,8 @@ def add_task(pid, deadline, title, description):
     cursor.execute(f"""SELECT MAX(tnumber)+1 FROM task WHERE pid=%s""", (pid,)) + 1
 
     tnumber = cursor.fetchone()[0]
-    cursor.execute(f"""INSERT INTO task VALUES (%s, %s, %s, %s, %s, 0)""", (pid,tnumber,title,description,deadline,))
+    cursor.execute(f"""INSERT INTO task VALUES (%s, %s, %s, %s, %s, 0)""",
+                   (pid, tnumber, title, description, deadline,))
 
     mysql.connection.commit()
     cursor.close()
@@ -792,7 +792,7 @@ def make_announcement(pid, announcement):
 
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""INSERT INTO annoucement VALUES (%s,%s,UTC_TIMESTAMP()) """, (pid,announcement,))
+    cursor.execute(f"""INSERT INTO annoucement VALUES (%s,%s,UTC_TIMESTAMP()) """, (pid, announcement,))
 
     mysql.connection.commit()
     cursor.close()
@@ -806,7 +806,7 @@ def edit_announcement(pid, announcement, time):
 
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""UPDATE annoucement SET annoucement=%s WHERE pid=%s AND time=%s """, (announcement,pid,time))
+    cursor.execute(f"""UPDATE annoucement SET annoucement=%s WHERE pid=%s AND time=%s """, (announcement, pid, time))
 
     mysql.connection.commit()
     cursor.close()
@@ -819,7 +819,8 @@ def delete_announcement(pid, announcement, time):
     announcement = base64.b64decode(announcement).decode()
 
     cursor = mysql.connection.cursor()
-    cursor.execute(f"""DELETE FROM annoucement WHERE pid=%s AND time=%s AND annoucement=%s""", (pid,time,announcement,))
+    cursor.execute(f"""DELETE FROM annoucement WHERE pid=%s AND time=%s AND annoucement=%s""",
+                   (pid, time, announcement,))
 
     mysql.connection.commit()
     cursor.close()
@@ -862,7 +863,7 @@ def edit_log(pid, lnumber, title, text):
 
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""UPDATE log SET title=%s,text=%s WHERE pid=%s AND lnumber=%s""", (title,text,pid,lnumber))
+    cursor.execute(f"""UPDATE log SET title=%s,text=%s WHERE pid=%s AND lnumber=%s""", (title, text, pid, lnumber))
 
     mysql.connection.commit()
     cursor.close()
@@ -925,7 +926,54 @@ def update_publisher(pname, pid):
     cursor = mysql.connection.cursor()
 
     if pname == "NULL": pname = None
-    cursor.execute(f"""UPDATE project SET pname=%s WHERE pid=%s""", (pname,pid))
+    cursor.execute(f"""UPDATE project SET pname=%s WHERE pid=%s""", (pname, pid))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+# Project
+@app.route("/new_project/title=<string:title>&uid=<int:uid>")
+def new_project(title, uid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""INSERT INTO project SELECT MAX(pid)+1, %s, NULL, 0 FROM project""", (title,))
+    mysql.connection.commit()
+
+    cursor.execute(f"""INSERT INTO worksOn SELECT %s, MAX(pid), 'lead' FROM project""", (uid,))
+    mysql.connection.commit()
+
+    cursor.execute(f"""SELECT * FROM project WHERE pid IN (SELECT MAX(pid) FROM project)""")
+    data = cursor.fetchone()
+    cursor.close()
+
+    return {
+        "pid": data[0],
+        "name": data[1],
+        "pname": data[2],
+        "progress": data[3]
+    }
+
+
+@app.route("/delete_project/pid=<int:pid>")
+def delete_project(pid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""DELETE FROM project WHERE pid=%s""", (pid,))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return ""
+
+
+@app.route("/edit_title/pid=<int:pid>&title=<string:title>")
+def edit_title(pid, title):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""UPDATE project SET name=%s WHERE pid=%s""", (title, pid,))
 
     mysql.connection.commit()
     cursor.close()
