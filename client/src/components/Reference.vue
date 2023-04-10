@@ -2,7 +2,6 @@
     <v-card
         @click="$emit('toggle')"
         :color="selected ? 'primary' : 'white'"
-        :title="reference.title"
     >
         <template v-slot:append>
             <v-btn
@@ -32,16 +31,20 @@
                 @click="$emit('toggle')"
             ></v-btn>
         </template>
+        <template v-slot:title>
+            <v-card-title class="text-wrap">{{ reference.title }}</v-card-title>
+        </template>
         <v-card-subtitle>{{ reference.authors.join(", ") }}</v-card-subtitle>
-        <v-card-text v-if="reference.type === 0">Published in {{ reference.pname }} on {{ reference.date }}</v-card-text>
+        <v-card-text v-if="reference.type === 0">Published in {{ reference.pname }} on {{ new Date(Date.parse(reference.date)).toLocaleString() }}</v-card-text>
         <v-card-text v-if="reference.type === 1">Published at {{ reference.pname }} {{ reference.year }}</v-card-text>
         <v-card-text v-if="reference.type === 2">ISBN {{ reference.isbn }}</v-card-text>
+        <v-card-text v-if="reference.type === 3">Accessed on {{ new Date(Date.parse(reference.date)) }}</v-card-text>
     </v-card>
 </template>
 
 <script lang="ts">
 export default {
-    props: [ "reference", "selected", "read", "canDelete" ],
+    props: [ "reference", "selected", "read", "canDelete", "titlesize" ],
     emits: [ "toggle", "toggleRead", "delete" ]
 }
 </script>

@@ -151,7 +151,7 @@
                 class="text-white spacing-playground pa-5 word-break: break-word mx-auto"
                 text="Keep track of your deadlines so you can plan your time wisely and finish your work on time"
                 title="Keep track of deadlines"
-                style="backdrop-filter: blur(10px); background: none"
+                style="backdrop-filter: blur(10px); background: none; margin-bottom:600px"
                 variant="outlined"
                 @scroll="tabValue=4"
             >

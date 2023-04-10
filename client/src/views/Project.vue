@@ -55,7 +55,7 @@
                     ></v-btn>
                 </v-row>
 
-                <v-timeline class="pa-5">
+                <v-timeline class="pa-5" density="comfortable">
                     <v-timeline-item
                         v-for="(item, index) in tasks"
                         :dot-color="item.completed ? 'green' : (new Date() < new Date(item.deadline) ? 'orange-darken-1' : 'red')"
@@ -159,169 +159,223 @@
 
             <v-spacer></v-spacer>
 
-            <v-col>
-                <v-card
-                    class="align-right justify-right"
-                    width="320"
-                    min-height="300"
-                    title="MEMBERS"
-                >
-                    <template v-slot:append>
-                        <v-menu
-                            width="300"
-                            v-model="menu2"
-                            :close-on-content-click="false"
+            <v-col class="align-right justify-end justify-content-end fill-width">
+                <v-row class="align-right justify-end">
+                    <v-col cols="6">
+                         <v-card
+                            class="align-right justify-end mr-4"
+                            width="320"
+                            min-height="300"
+                            title="LOGS"
                         >
-                            <template v-slot:activator="{ props }">
+                            <template v-slot:append>
+                                <v-btn
+                                    variant="text"
+                                    icon="mdi-notebook"
+                                    @click="logbookOpen = true; editing = false"
+                                ></v-btn>
                                 <v-btn
                                     variant="text"
                                     icon=""
-                                    v-bind="props"
+                                    @click="logs.unshift(
+                                        {
+                                            'pid': projects[selectedItem].pid,
+                                            'lnumber': Math.max.apply(Math, logs.map(x => x.lnumber))+1,
+                                            'uid': userStore.uid,
+                                            'firstname': userStore.firstname,
+                                            'title': 'Untitled Log',
+                                            'date': new Date(),
+                                            'text': ''
+                                        }
+                                    ); shownLogs.unshift(logs[0]); logbookPage = 1; text = 'Write your log here.'; title = 'Untitled Log'; addLog(); logbookOpen = true; editing = true"
                                 >+</v-btn>
                             </template>
+
                             <v-list density="compact">
-                                <v-list-subheader>SUGGESTIONS</v-list-subheader>
-                                <v-list-item
-                                    v-for="(item2, i) in suggestedMembers"
-                                    :key="i"
-                                    :value="item2"
-                                    :title="item2.username"
-                                    @click="addMember(item2.uid); menu2 = false"
-                                ></v-list-item>
-                                <v-divider></v-divider>
                                 <v-text-field
-                                    v-model="possibleUsername"
-                                    class="pa-5 rounded-pill"
-                                    color="primary"
-                                    label="Username"
-                                    prepend-icon="mdi-account"
+                                    v-model="logSearchTerm"
+                                    label="Search"
+                                    class="pr-5 pl-5"
                                     variant="outlined"
-                                    @update:modelValue="getPossibleMembers()"
+                                    color="primary"
+                                    @update:modelValue="shownLogs = logs.filter(x => x.title.toLowerCase().includes(logSearchTerm.toLowerCase()))"
                                 ></v-text-field>
+
+                                <v-list-item>
+                                    <v-list-item-subtitle>{{ shownLogs.length + " logs found" }}</v-list-item-subtitle>
+                                </v-list-item>
+
                                 <v-list-item
-                                    v-for="(item2, i) in possibleMembers"
+                                    v-for="(item, i) in shownLogs"
                                     :key="i"
-                                    :value="item2"
-                                    :title="item2.username"
-                                    @click="addMember(item2.uid); menu2 = false"
-                                ></v-list-item>
-                            </v-list>
-                        </v-menu>
-                    </template>
-
-                    <v-list density="compact">
-                        <v-list-item
-                            v-for="(item, i) in members"
-                            :key="i"
-                            :value="item"
-                            active-color="primary"
-                        >
-                            <template v-slot:prepend>
-                                <v-icon icon="mdi-account-circle" :color="colour(item.uid)"></v-icon>
-                            </template>
-
-                            <v-list-item-title v-text="item.firstname"></v-list-item-title>
-
-                            <template v-slot:append>
-                                <v-menu>
-                                    <template v-slot:activator="{ props: menu }">
-                                        <v-btn
-                                            color="primary"
-                                            variant="text"
-                                            v-bind="menu"
-                                            :disabled="!lead"
+                                    :value="item"
+                                    active-color="primary"
+                                    @click="logbookPage=logs.map(x => x.lnumber).indexOf(item.lnumber)+1; logbookOpen=true; editing = false"
+                                >
+                                    <template v-slot:append>
+                                        <v-chip
+                                            :color="colour(item.uid)"
                                         >
-                                            {{ item.role }}
-                                        </v-btn>
-
-                                        <v-btn
-                                            icon="mdi-trash-can"
-                                            elevation="0"
-                                            @click="deleteMember(item.uid)"
-                                            v-if="lead"
-                                        >
-                                            <v-icon color="red"></v-icon>
-                                        </v-btn>
+                                            {{ item.firstname }}
+                                        </v-chip>
                                     </template>
+                                    <v-list-item-title v-text="item.title"></v-list-item-title>
+                                    <v-list-item-subtitle v-text="new Date(Date.parse(item.date)).toLocaleString()"></v-list-item-subtitle>
+                                </v-list-item>
+                            </v-list>
+                        </v-card>
+                    </v-col>
 
-                                    <v-list>
+                    <v-col cols="6">
+                        <v-card
+                            class="align-right justify-right fill-height"
+                            width="320"
+                            min-height="300"
+                            title="MEMBERS"
+                        >
+                            <template v-slot:append>
+                                <v-menu
+                                    width="300"
+                                    v-model="menu2"
+                                    :close-on-content-click="false"
+                                >
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn
+                                            variant="text"
+                                            icon=""
+                                            v-bind="props"
+                                        >+</v-btn>
+                                    </template>
+                                    <v-list density="compact">
+                                        <v-list-subheader>SUGGESTIONS</v-list-subheader>
                                         <v-list-item
-                                            v-for="(item2, i) in ['Member', 'Lead']"
+                                            v-for="(item2, i) in suggestedMembers"
                                             :key="i"
                                             :value="item2"
-                                            :title="item2"
-                                            @click="item.role=item2.toLowerCase()"
+                                            :title="item2.username"
+                                            @click="addMember(item2.uid); menu2 = false"
+                                        ></v-list-item>
+                                        <v-divider></v-divider>
+                                        <v-text-field
+                                            v-model="possibleUsername"
+                                            class="pa-5 rounded-pill"
+                                            color="primary"
+                                            label="Username"
+                                            prepend-icon="mdi-account"
+                                            variant="outlined"
+                                            @update:modelValue="getPossibleMembers()"
+                                        ></v-text-field>
+                                        <v-list-item
+                                            v-for="(item2, i) in possibleMembers"
+                                            :key="i"
+                                            :value="item2"
+                                            :title="item2.username"
+                                            @click="addMember(item2.uid); menu2 = false"
                                         ></v-list-item>
                                     </v-list>
                                 </v-menu>
                             </template>
-                        </v-list-item>
-                    </v-list>
-                </v-card>
 
-                <v-card
-                    class="align-right justify-end"
-                    width="320"
-                    min-height="300"
-                    title="LOGS"
-                    style="margin-top:25px"
-                >
-                    <template v-slot:append>
-                        <v-btn
-                            variant="text"
-                            icon="mdi-notebook"
-                            @click="logbookOpen = true; editing = false"
-                        ></v-btn>
-                        <v-btn
-                            variant="text"
-                            icon=""
-                            @click="logs.unshift(
-                                {
-                                    'pid': projects[selectedItem].pid,
-                                    'lnumber': Math.max.apply(Math, logs.map(x => x.lnumber))+1,
-                                    'uid': userStore.uid,
-                                    'firstname': userStore.firstname,
-                                    'title': 'Untitled Log',
-                                    'date': new Date(),
-                                    'text': ''
-                                }
-                            ); shownLogs.unshift(logs[0]); logbookPage = 1; text = 'Write your log here.'; title = 'Untitled Log'; addLog(); logbookOpen = true; editing = true"
-                        >+</v-btn>
-                    </template>
+                            <v-list density="compact">
+                                <v-list-item
+                                    v-for="(item, i) in members"
+                                    :key="i"
+                                    :value="item"
+                                    active-color="primary"
+                                >
+                                    <template v-slot:prepend>
+                                        <v-icon icon="mdi-account-circle" :color="colour(item.uid)"></v-icon>
+                                    </template>
 
-                    <v-list density="compact">
-                        <v-text-field
-                            v-model="logSearchTerm"
-                            label="Search"
-                            class="pr-5 pl-5"
-                            variant="outlined"
-                            color="primary"
-                            @update:modelValue="shownLogs = logs.filter(x => x.title.toLowerCase().includes(logSearchTerm.toLowerCase()))"
-                        ></v-text-field>
+                                    <v-list-item-title v-text="item.firstname"></v-list-item-title>
 
-                        <v-list-item>
-                            <v-list-item-subtitle>{{ shownLogs.length + " logs found" }}</v-list-item-subtitle>
-                        </v-list-item>
+                                    <template v-slot:append>
+                                        <v-menu>
+                                            <template v-slot:activator="{ props: menu }">
+                                                <v-btn
+                                                    color="primary"
+                                                    variant="text"
+                                                    v-bind="menu"
+                                                    :disabled="!lead"
+                                                >
+                                                    {{ item.role }}
+                                                </v-btn>
 
-                        <v-list-item
-                            v-for="(item, i) in shownLogs"
-                            :key="i"
-                            :value="item"
-                            active-color="primary"
-                            @click="logbookPage=logs.map(x => x.lnumber).indexOf(item.lnumber)+1; logbookOpen=true; editing = false"
+                                                <v-btn
+                                                    icon="mdi-trash-can"
+                                                    elevation="0"
+                                                    @click="deleteMember(item.uid)"
+                                                    v-if="lead"
+                                                >
+                                                    <v-icon color="red"></v-icon>
+                                                </v-btn>
+                                            </template>
+
+                                            <v-list>
+                                                <v-list-item
+                                                    v-for="(item2, i) in ['Member', 'Lead']"
+                                                    :key="i"
+                                                    :value="item2"
+                                                    :title="item2"
+                                                    @click="item.role=item2.toLowerCase()"
+                                                ></v-list-item>
+                                            </v-list>
+                                        </v-menu>
+                                    </template>
+                                </v-list-item>
+                            </v-list>
+                        </v-card>
+                    </v-col>
+
+                    <v-col cols="12">
+                        <v-card
+                            class="align-right justify-end justify-content-end"
+                            width="660"
+                            min-height="300"
+                            title="REFERENCES"
+                            style="margin-top:25px"
                         >
                             <template v-slot:append>
-                                <v-chip
-                                    :color="colour(item.uid)"
-                                >
-                                    {{ item.firstname }}
-                                </v-chip>
+                                <v-btn
+                                    variant="text"
+                                    icon=""
+                                    @click="$refs.refDialog.show = true"
+                                >+</v-btn>
                             </template>
-                            <v-list-item-title v-text="item.title"></v-list-item-title>
-                            <v-list-item-subtitle v-text="new Date(Date.parse(item.date)).toLocaleString()"></v-list-item-subtitle>
-                        </v-list-item>
-                    </v-list>
-                </v-card>
+                            <v-list density="compact">
+                                <v-text-field
+                                    v-model="referencesSearchTerm"
+                                    label="Search"
+                                    class="pr-5 pl-5"
+                                    variant="outlined"
+                                    color="primary"
+                                    @update:modelValue="shownReferences = references.filter(x => x.title.toLowerCase().includes(referencesSearchTerm.toLowerCase()))"
+                                ></v-text-field>
+
+                                <v-list-item>
+                                    <v-list-item-subtitle>
+                                        {{ shownReferences.length + " references " + (referencesSearchTerm === '' ? 'cited' : 'found') }}
+                                    </v-list-item-subtitle>
+                                </v-list-item>
+
+                                <v-list-item
+                                    v-for="(item, i) in shownReferences"
+                                    :key="i"
+                                    :value="item"
+                                    active-color="primary"
+                                >
+                                    <Reference
+                                        :read="false"
+                                        :can-delete="true"
+                                        :reference="item"
+                                        :selected="false"
+                                        @delete="deleteReference(item)"
+                                    ></Reference>
+                                </v-list-item>
+                            </v-list>
+                        </v-card>
+                    </v-col>
+                </v-row>
             </v-col>
         </v-row>
 
@@ -666,6 +720,11 @@
                 ></v-pagination>
             </v-card>
         </v-dialog>
+
+        <ReferenceDialog
+            ref="refDialog"
+            @addReference="addReference"
+        ></ReferenceDialog>
     </v-container>
 </template>
 
@@ -686,6 +745,8 @@ import Log from "@/components/Log.vue"
 
 import { VMarkdownView } from 'vue3-markdown'
 import 'vue3-markdown/dist/style.css'
+import Reference from "@/components/Reference.vue";
+import ReferenceDialog from "@/components/ReferenceDialog.vue";
 
 const userStore = useUserStore()
 
@@ -733,6 +794,12 @@ const editing: Ref = ref(false)
 
 const lead: Ref = ref(false)
 
+const references: Ref = ref([])
+const shownReferences: Ref = ref([])
+
+const refDialog = ref(null)
+const referencesSearchTerm = ref("")
+
 const recomputeProgress = function(tnumber: number) {
     let count = 0
     let length = 0
@@ -763,9 +830,11 @@ const loadEverything = async function() {
     shownLogs.value = logs.value.map(x => x)
 
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+    references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
+    //@ts-ignore
+    shownReferences.value = references.value.map(x => x)
 
     journals.value = await (await fetch(SERVER + "/publishers")).json()
-
     suggestedMembers.value = await (await fetch(SERVER + '/suggested_members/uid='+userStore.uid)).json()
 
     lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
@@ -793,6 +862,7 @@ const getTasks = async function () {
     shownLogs.value = logs.value.map(x => x)
 
     announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+    references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
 
     lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
 }
@@ -944,10 +1014,31 @@ const updatePublisher = async function() {
 }
 
 
+const addReference = async function() {
+    // @ts-ignore
+    let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replaceAll("/", "$2F")+
+        "\"&pid="+projects.value[selectedItem.value].pid)).json()
+    if (data.status == 0) {
+        error.value = data.error
+        errorDialog.value = true
+    }
+
+    // Reload the references
+    references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
+}
+
+const deleteReference = function(item: object) {
+    //@ts-ignore
+    fetch(SERVER + "/delete_reference/doi=\""+item.doi.replaceAll("/", "$2F")+"&pid="+projects.value[selectedItem.value].pid)
+    references.value = references.value.filter(i => i !== item)
+}
+
+
 const print = function(x: any) { console.log(x) }
 
 
 onMounted(() => {
     loadEverything()
+    return { refDialog }
 })
 </script>
