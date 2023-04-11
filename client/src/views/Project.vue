@@ -852,7 +852,7 @@ const recomputeProgress = function(tnumber: number) {
 }
 
 const loadEverything = async function() {
-    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid)).json()
+    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid + "&order=0")).json()
     progress.value = projects.value[selectedItem.value].progress * 100
     if (projects.value[selectedItem.value].pname != null) {
         publisher.value = await (await fetch(

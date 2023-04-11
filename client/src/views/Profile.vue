@@ -1,6 +1,6 @@
 <template>
     <v-container fill-height>
-        <v-card width="500" class="mt-10">
+        <v-card width="600" class="mt-10">
             <v-card-title v-if="!editing">{{ userStore.firstname }} {{ userStore.lastname }}</v-card-title>
             <v-row class="pa-6" v-if="editing">
                 <v-text-field
@@ -35,6 +35,34 @@
                 <v-btn color="red" v-if="editing" @click="editing=!editing">Cancel</v-btn>
                 <v-btn color="primary" @click="changingPassword=true">Change Password</v-btn>
             </v-card-actions>
+            <v-divider></v-divider>
+            <v-card-title>Your Progress</v-card-title>
+            <v-card-text>{{ numUndoneTasks }} tasks outstanding, {{ numOverdueTasks }} overdue</v-card-text>
+            <v-card-text>{{ numUnreadReferences }} unread references</v-card-text>
+            <v-divider></v-divider>
+            <v-list density="compact">
+                <v-list-subheader>PROJECTS</v-list-subheader>
+                <v-list-item
+                    v-for="(item, i) in projects"
+                    :key="i"
+                    :value="item"
+                >
+                    <v-list-item>{{ item.name }}</v-list-item>
+
+                    <template v-slot:append>
+                        <v-progress-circular
+                            :rotate="360"
+                            :size="50"
+                            :width="5"
+                            :model-value="item.progress * 100"
+                            color="primary"
+                            style="margin-left:15px"
+                        >
+                            {{ (item.progress * 100).toFixed() + '%' }}
+                        </v-progress-circular>
+                    </template>
+                </v-list-item>
+            </v-list>
         </v-card>
 
         <v-row justify="center">
@@ -85,7 +113,7 @@
 
 <script lang="ts" setup>
 import { useUserStore } from "@/store/app"
-import { Ref, ref } from "vue"
+import {onMounted, Ref, ref} from "vue"
 import { SERVER } from "@/main"
 const userStore = useUserStore()
 
@@ -97,6 +125,12 @@ const changingPassword: Ref<boolean> = ref(false)
 
 const show1: Ref<boolean> = ref(false)
 const show2: Ref<boolean> = ref(false)
+
+const projects: Ref = ref()
+
+const numUndoneTasks: Ref<number> = ref(0)
+const numOverdueTasks: Ref<number> = ref(0)
+const numUnreadReferences: Ref<number> = ref(0)
 
 const updateDatabase = function() {
     fetch(
@@ -116,4 +150,17 @@ const changePassword = function() {
         "&new_password="+newPassword.value
     )
 }
+
+const loadStats = async function() {
+    projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid + "&order=1")).json()
+
+    let lst = await (await fetch(SERVER + "/num_tasks/uid=" + userStore.uid)).json()
+    numUndoneTasks.value = lst[0]
+    numOverdueTasks.value = lst[1]
+    numUnreadReferences.value = (await (await fetch(SERVER + "/num_unread_references/uid=" + userStore.uid)).json())[0]
+}
+
+onMounted(() => {
+    loadStats()
+})
 </script>

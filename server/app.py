@@ -327,6 +327,19 @@ def get_references_2(pid):
     return jsonify(lst)
 
 
+@app.route("/num_unread_references/uid=<int:uid>")
+def num_unread_references(uid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT COUNT(*) FROM isRead WHERE uid=%s AND hasRead=0""", (uid,))
+    data = cursor.fetchone()
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(data)
+
+
 # Adding References
 def check_doi(doi, cursor):
     cursor.execute(f"""SELECT doi FROM reference WHERE doi=%s """, (doi,))
@@ -484,14 +497,22 @@ def delete_reference_2(doi, pid):
 
 
 # Project Management
-@app.route('/projects/uid=<int:uid>')
-def get_projects(uid):
+@app.route('/projects/uid=<int:uid>&order=<int:order>')
+def get_projects(uid, order):
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""
-    SELECT p.pid, p.name, p.pname, p.progress 
-    FROM worksOn w, project p 
-    WHERE uid=%s AND p.pid=w.pid """, (uid,))
+    if order == 1:
+        cursor.execute(f"""
+        SELECT p.pid, p.name, p.pname, p.progress 
+        FROM worksOn w, project p 
+        WHERE uid=%s AND p.pid=w.pid
+        ORDER BY p.progress""", (uid,))
+    else:
+        cursor.execute(f"""
+        SELECT p.pid, p.name, p.pname, p.progress 
+        FROM worksOn w, project p 
+        WHERE uid=%s AND p.pid=w.pid """, (uid,))
+
     data = cursor.fetchall()
 
     projects = [
@@ -787,6 +808,27 @@ def add_task(pid, deadline, title, description):
     cursor.close()
 
     return ""
+
+
+@app.route("/num_tasks/uid=<int:uid>")
+def num_tasks(uid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT t1.num, t2.num FROM (
+        SELECT COUNT(*) num
+        FROM assigned a, task t 
+        WHERE a.tnumber = t.tnumber AND a.uid = %s AND t.completed = 0 AND t.deadline < NOW()
+    ) t1, (
+        SELECT COUNT(*) num
+        FROM assigned a, task t 
+        WHERE a.tnumber = t.tnumber AND a.uid = %s AND t.completed = 0 AND t.deadline >= NOW()  
+    ) t2""", (uid,uid,))
+    data = cursor.fetchone()
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(data)
 
 
 # Getting Announcements

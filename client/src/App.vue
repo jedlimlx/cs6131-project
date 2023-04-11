@@ -260,7 +260,6 @@
 
 <script lang="ts" setup>
 import { createApp, ref, Ref } from 'vue'
-import App from './App.vue'
 
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
@@ -269,7 +268,6 @@ import * as directives from 'vuetify/directives'
 
 import Home from "@/views/Home.vue"
 import Project from "@/views/Project.vue"
-import Feedback from "@/views/Feedback.vue"
 
 import { useUserStore } from "@/store/app"
 import { storeToRefs } from "pinia"
