@@ -30,7 +30,7 @@ def parse_bib(bibitem, journals):
     if "@article" in bibitem:
         journal = re.findall(r"journal = {(.*?)}.?\n", bibitem)[0]
         if journal not in journals:
-            output += f"INSERT INTO publisher VALUES ({journal}, NULL, 0, NULL);\n"
+            output += f"INSERT INTO publisher VALUES ('{journal}', NULL, 0, NULL);\n"
 
         volume = re.findall(r"volume = {(.*?)}", bibitem)
         if len(volume) == 0: volume = "NULL"
@@ -69,12 +69,14 @@ INSERT INTO conferenceArticle VALUES ("{doi}", "{journal}", {year});\n"""
     elif "@misc" in bibitem:
         journal = re.findall(r"publisher = {(.*?)}.?\n", bibitem, re.MULTILINE)[0]
         if journal not in journals:
-            print(f"INSERT INTO publisher VALUES ({journal}, NULL, 0, NULL)")
+            output += f"INSERT INTO publisher VALUES ({journal}, NULL, 0, NULL);\n"
 
-        print(f"""INSERT INTO reference VALUES ("{doi}", "{title}", 0);
-INSERT INTO journalarticle VALUES ("{doi}", "{journal}", NULL, NULL, NULL, NULL, NULL);""")
+        output += f"""INSERT INTO reference VALUES ("{doi}", "{title}", 0);
+INSERT INTO journalarticle VALUES ("{doi}", "{journal}", NULL, NULL, NULL, NULL, NULL);"""
         for author in authors:
-            print(f'INSERT INTO authors VALUES ("{doi}", "{author}");')
+            output += f'INSERT INTO authors VALUES ("{doi}", "{author}");\n'
+            
+    return output
 
 
 def scrape_arbitrary(doi, journals):

@@ -133,11 +133,13 @@
                             variant="outlined"
                             color="primary"
                             :rules="[
-                                v => v.length >= 6 || 'Password must be at least 6 characters long'
+                                v => v.length >= 8 || 'Password must be at least 8 characters long'
                             ]"
+                            class="pb-5"
                         ></v-text-field>
 
                         <v-text-field
+                            v-model="password2"
                             :append-icon="show3 ? 'mdi-eye' : 'mdi-eye-off'"
                             :type="show3 ? 'text' : 'password'"
                             @click:append="show3 = !show3"
@@ -283,6 +285,8 @@ const vuetify = createVuetify({
 const userStore = useUserStore()
 const { loggedIn, username, firstname, lastname, uid, email, creatingNewAccount } = storeToRefs(userStore)
 
+const password2: Ref<string> = ref("")
+
 const drawerShown: Ref<boolean> = ref(false)
 
 const loggingIn: Ref<boolean> = ref(false)
@@ -348,6 +352,24 @@ const login = async function() {
 }
 
 const newAccount = async function() {
+    if (!email.value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+        newAccountErrorMessage.value = "Invalid Email!"
+        newAccountError.value = true
+        return
+    }
+
+    if (password.value !== password2.value) {
+        newAccountErrorMessage.value = "The 2 passwords do not match!"
+        newAccountError.value = true
+        return
+    }
+
+    if (password.value.length <= 8) {
+        newAccountErrorMessage.value = "Your password must be at least 8 characters long!"
+        newAccountError.value = true
+        return
+    }
+
     let success = await (await fetch(SERVER + '/register/username='+username.value+
         "&email="+email.value+
         "&first_name="+firstname.value+

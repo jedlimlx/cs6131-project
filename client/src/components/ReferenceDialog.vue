@@ -22,7 +22,7 @@
 
                 <v-window v-model="tab">
                     <v-window-item value="one">
-                        <v-card-text>Supports ArXiv, Nature and AIP Journals</v-card-text>
+                        <v-card-text>Supports DOIs / URLs</v-card-text>
 
                         <v-text-field
                             v-model="doi"

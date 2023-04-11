@@ -238,6 +238,7 @@ def get_reference(doi):
                 json["icon"] = "https://www.wolfram.com/common/framework/img/spikey.en.png"
             else:
                 lst = re.findall(r'<link rel="icon" .*? href="(.*?)" .*?>', requests.get(doi).text)
+                print(lst)
                 if len(lst) == 0: json["icon"] = None
                 else: json["icon"] = doi + ("" if doi[-1] == "/" else "/") + lst[0][1:]
 
@@ -338,8 +339,8 @@ def check_doi(doi, cursor):
             command = scrape_nature(doi)
         elif "10.1017" in doi:  # cambridge
             command = scrape_cambridge(doi)
-        elif re.match(r"^10.\d{4,9}/[-._;()/:A-Z0-9]+$", doi):
-            command = scrape_arbitrary(doi)
+        elif re.match(r"^10.\d{4,9}/[-._;()/:A-Za-z0-9]+$", doi):
+            command = scrape_arbitrary(doi, [x["pname"] for x in get_publishers()])
         else:  # assume it's a website
             command = scrape_website(doi)
 
