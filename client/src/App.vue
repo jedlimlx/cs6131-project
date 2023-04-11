@@ -28,7 +28,7 @@
             <v-btn elevation=0 color="white" padding="4" @click="creatingNewAccount = true" v-if="!loggedIn">
                 New Account
             </v-btn>
-            <v-btn elevation=0 color="white" padding="4" @click="userStore.logout(); passsword = ''; $router.push('/')" v-if="loggedIn">
+            <v-btn elevation=0 color="white" padding="4" @click="password = ''; userStore.logout(); $router.push('/')" v-if="loggedIn">
                 Logout
             </v-btn>
         </v-app-bar>
@@ -100,6 +100,10 @@
                             label="Enter Email"
                             variant="outlined"
                             color="primary"
+                            :rules="[
+                                v => v.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/) || 'Invalid Email'
+                            ]"
+                            class="pb-5"
                         ></v-text-field>
 
                         <v-row class="pr-3 pl-3 pt-2 pb-2">
@@ -128,6 +132,9 @@
                             label="Enter Password"
                             variant="outlined"
                             color="primary"
+                            :rules="[
+                                v => v.length >= 6 || 'Password must be at least 6 characters long'
+                            ]"
                         ></v-text-field>
 
                         <v-text-field
@@ -235,7 +242,7 @@
                         Error
                     </v-card-title>
                     <v-card-text>
-                        There was an error while creating your account
+                        {{ newAccountErrorMessage }}
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
@@ -284,6 +291,7 @@ const alertShown: Ref<boolean> = ref(false)
 
 const newAccountCreated: Ref<boolean> = ref(false)
 const newAccountError: Ref<boolean> = ref(false)
+const newAccountErrorMessage: Ref<string> = ref("")
 
 const show1: Ref<boolean> = ref(false)
 const show2: Ref<boolean> = ref(false)
@@ -292,6 +300,7 @@ const show3: Ref<boolean> = ref(false)
 const password: Ref<string> = ref("")
 
 const loginError: Ref<boolean> = ref(false)
+const loginErrorMessage: Ref<string> = ref("")
 
 const routes = [
     {
@@ -349,6 +358,12 @@ const newAccount = async function() {
         newAccountCreated.value = true
     } else {
         newAccountError.value = true
+        if (success.error[1].includes("Duplicate entry")) {
+            // either username / email is duplicated
+            newAccountErrorMessage.value = "This username / email is already registered!"
+        } else {
+            newAccountErrorMessage.value = "There was an error while creating your account"
+        }
     }
 }
 </script>

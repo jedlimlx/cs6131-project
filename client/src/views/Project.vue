@@ -5,7 +5,9 @@
             <v-btn color="primary" icon="mdi-plus" @click="editedTitle = ''; newProject = true; editTitleDialog=true"></v-btn>
         </v-row>
 
-        <v-row>
+        <div class="text-h5 pr-6" v-if="projects.length === 0">No Projects Created. Create one now!</div>
+
+        <v-row v-if="projects.length > 0">
             <v-menu v-if="projects.length > 0">
                 <template v-slot:activator="{ props }">
                     <v-btn
@@ -33,7 +35,7 @@
             <v-btn color="black" icon="mdi-bullhorn" @click="announcementDialog=true" variant="text"></v-btn>
         </v-row>
 
-        <v-row class="pt-10">
+        <v-row class="pt-10" v-if="projects.length > 0">
             <v-virtual-scroll height="500">
                 <v-row style="margin-left:10px">
                     <div class="text-h4 centre">Timeline</div>
@@ -453,7 +455,7 @@
                         color="primary"
                         text
                         @click="announcementIndex = -1; text = ''; announcementCreationDialog = true"
-                        v-if="members[members.map(x => x.uid).findIndex(x => x ===userStore.uid)].role === 'lead'"
+                        v-if="lead"
                     >New</v-btn>
                 </v-card-actions>
             </v-card>

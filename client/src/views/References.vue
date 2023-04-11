@@ -195,7 +195,7 @@ const loadReference = async function () {
 
 const addReference = async function() {
     // @ts-ignore
-    let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replace("/", "$2F")+
+    let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replaceAll("/", "$2F")+
         "\"&uid="+userStore.uid+"&read=0")).json()
     if (data.status == 0) {
         error.value = data.error

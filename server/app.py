@@ -1,3 +1,5 @@
+import re
+import requests
 import base64
 import hashlib
 import secrets
@@ -11,6 +13,8 @@ from arvix import scrape_arxiv
 from apl import scrape_apl
 from cambridge import scrape_cambridge
 from nature import scrape_nature
+from website import scrape_website
+from arbitrary import scrape_arbitrary
 
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
@@ -227,6 +231,16 @@ def get_reference(doi):
             data = cursor.fetchone()
             json["dateAccessed"] = data[1]
 
+            # get icon of website
+            if "paperswithcode" in doi:
+                json["icon"] = "https://paperswithcode.com/static/logo.png"
+            elif "wolfram" in doi:
+                json["icon"] = "https://www.wolfram.com/common/framework/img/spikey.en.png"
+            else:
+                lst = re.findall(r'<link rel="icon" .*? href="(.*?)" .*?>', requests.get(doi).text)
+                if len(lst) == 0: json["icon"] = None
+                else: json["icon"] = doi + ("" if doi[-1] == "/" else "/") + lst[0][1:]
+
         mysql.connection.commit()
         cursor.close()
 
@@ -268,7 +282,10 @@ def get_references_1(uid):
     cursor = mysql.connection.cursor()
 
     # Executing SQL Statements
-    cursor.execute(f"""SELECT * FROM isRead WHERE uid=%s """, (uid,))
+    cursor.execute(f"""SELECT r.doi, ir.hasRead
+    FROM isRead ir, reference r 
+    WHERE uid=%s AND ir.DOI = r.DOI 
+    ORDER BY title""", (uid,))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB
@@ -290,7 +307,10 @@ def get_references_2(pid):
     cursor = mysql.connection.cursor()
 
     # Executing SQL Statements
-    cursor.execute(f"""SELECT * FROM cited WHERE pid=%s """, (pid,))
+    cursor.execute(f"""SELECT r.doi 
+    FROM cited c, reference r 
+    WHERE pid=%s AND c.DOI = r.DOI 
+    ORDER BY title""", (pid,))
     data = cursor.fetchall()
 
     # Saving the actions performed on the DB
@@ -318,8 +338,10 @@ def check_doi(doi, cursor):
             command = scrape_nature(doi)
         elif "10.1017" in doi:  # cambridge
             command = scrape_cambridge(doi)
-        else:
-            raise Exception("Unsupported DOI")
+        elif re.match(r"^10.\d{4,9}/[-._;()/:A-Z0-9]+$", doi):
+            command = scrape_arbitrary(doi)
+        else:  # assume it's a website
+            command = scrape_website(doi)
 
         for c in command.split(";")[:-1]:
             cursor.execute(c)
@@ -756,6 +778,7 @@ def add_task(pid, deadline, title, description):
     cursor.execute(f"""SELECT MAX(tnumber)+1 FROM task WHERE pid=%s""", (pid,)) + 1
 
     tnumber = cursor.fetchone()[0]
+    tnumber = 0 if tnumber is None else tnumber
     cursor.execute(f"""INSERT INTO task VALUES (%s, %s, %s, %s, %s, 0)""",
                    (pid, tnumber, title, description, deadline,))
 
