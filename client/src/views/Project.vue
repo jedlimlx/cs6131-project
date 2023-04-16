@@ -88,7 +88,6 @@
                             {{ new Date(Date.parse(publisher.deadline)).toLocaleString() }}
                         </template>
                         <v-card
-                            :subtitle="publisher.website"
                             :text="new Date(publisher.deadline) > new Date ? Math.ceil(((new Date(publisher.deadline)).getTime() - (new Date()).getTime()) / (1000 * 24 * 3600)) + ' days left' : 'Deadline over'"
                             width="250"
                             class="text-wrap"
@@ -98,10 +97,15 @@
                                     {{ publisher.pname }}
                                 </v-card-title>
                             </template>
+                            <template v-slot:subtitle>
+                                <v-card-subtitle class="text-wrap">
+                                    {{ publisher.website }}
+                                </v-card-subtitle>
+                            </template>
                             <v-card-actions>
                                 <v-btn @click="publisher = []; updatePublisher()" color="primary">Remove Goal</v-btn>
                                 <v-spacer></v-spacer>
-                                <v-btn icon="mdi-link" :href="publisher.website"></v-btn>
+                                <v-btn icon="mdi-link" :href="publisher.website" target="_blank"></v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-timeline-item>
@@ -115,15 +119,23 @@
                             No deadline :)
                         </template>
                         <v-card
-                            :title="publisher.pname"
-                            :subtitle="publisher.website"
                             width="250"
                             class="text-wrap"
                         >
+                            <template v-slot:title>
+                                <v-card-title class="text-wrap">
+                                    {{ publisher.pname }}
+                                </v-card-title>
+                            </template>
+                            <template v-slot:subtitle>
+                                <v-card-subtitle class="text-wrap">
+                                    {{ publisher.website }}
+                                </v-card-subtitle>
+                            </template>
                             <v-card-actions>
                                 <v-btn @click="publisher = []; updatePublisher()" color="primary">Remove Goal</v-btn>
                                 <v-spacer></v-spacer>
-                                <v-btn icon="mdi-link" :href="publisher.website"></v-btn>
+                                <v-btn icon="mdi-link" :href="publisher.website" target="_blank"></v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-timeline-item>
@@ -184,7 +196,7 @@
                                     @click="logs.unshift(
                                         {
                                             'pid': projects[selectedItem].pid,
-                                            'lnumber': Math.max.apply(Math, logs.map(x => x.lnumber))+1,
+                                            'lnumber': logs.length > 0 ? Math.max.apply(Math, logs.map(x => x.lnumber))+1 : 0,
                                             'uid': userStore.uid,
                                             'firstname': userStore.firstname,
                                             'title': 'Untitled Log',
@@ -251,7 +263,7 @@
                                         >+</v-btn>
                                     </template>
                                     <v-list density="compact">
-                                        <v-list-subheader>SUGGESTIONS</v-list-subheader>
+                                        <v-list-subheader v-if="suggestedMembers.length > 0">SUGGESTIONS</v-list-subheader>
                                         <v-list-item
                                             v-for="(item2, i) in suggestedMembers"
                                             :key="i"
@@ -259,7 +271,7 @@
                                             :title="item2.username"
                                             @click="addMember(item2.uid); menu2 = false"
                                         ></v-list-item>
-                                        <v-divider></v-divider>
+                                        <v-divider v-if="suggestedMembers.length > 0"></v-divider>
                                         <v-text-field
                                             v-model="possibleUsername"
                                             class="pa-5 rounded-pill"
@@ -629,12 +641,12 @@
                     <v-toolbar-items>
                         <v-btn
                             @click="editLog(logbookPage-1); editing=!editing"
-                            v-if="userStore.uid === logs[logbookPage-1].uid"
+                            v-if="logs.length > 0 && userStore.uid === logs[logbookPage-1].uid"
                         >
                             <v-icon :icon="editing ? 'mdi-content-save' : 'mdi-pencil'" color="white"></v-icon>
                         </v-btn>
-                        <v-btn @click="deleteLog(logbookPage-1); logbookPage=Math.min(logbookPage,logs.length)">
-                            <v-icon icon="mdi-trash-can" color="white"></v-icon>
+                        <v-btn @click="deleteLog(logbookPage-1)">
+                            <v-icon icon="mdi-trash-can" color="white" v-if="logs.length > 0"></v-icon>
                         </v-btn>
                     </v-toolbar-items>
                 </v-toolbar>
@@ -721,7 +733,11 @@
                     v-model="logbookPage"
                     class="align-bottom justify-bottom"
                     @click="editLog(logbookPage); editing = false"
+                    v-if="logs.length > 0"
                 ></v-pagination>
+                <v-card-title v-if="logs.length <= 0">
+                    No logs here yet!
+                </v-card-title>
             </v-card>
         </v-dialog>
 
@@ -782,10 +798,11 @@ import { VMarkdownView } from 'vue3-markdown'
 import 'vue3-markdown/dist/style.css'
 import Reference from "@/components/Reference.vue";
 import ReferenceDialog from "@/components/ReferenceDialog.vue";
+import {storeToRefs} from "pinia";
 
 const userStore = useUserStore()
 
-const selectedItem: Ref = ref(0)
+const { selectedItem } = storeToRefs(userStore)
 const projects: Ref = ref([])
 const tasks: Ref = ref([])
 const publisher: Ref = ref([])
@@ -853,30 +870,35 @@ const recomputeProgress = function(tnumber: number) {
 
 const loadEverything = async function() {
     projects.value = await (await fetch(SERVER + "/projects/uid=" + userStore.uid + "&order=0")).json()
-    progress.value = projects.value[selectedItem.value].progress * 100
-    if (projects.value[selectedItem.value].pname != null) {
-        publisher.value = await (await fetch(
-            SERVER + "/publisher/pname=" + projects.value[selectedItem.value].pname
-        )).json()
-    } else {
-        publisher.value = []
+    selectedItem.value = Math.min(selectedItem.value, projects.value.length - 1)
+
+    if (projects.value.length > 0) {
+        progress.value = projects.value[selectedItem.value].progress * 100
+        if (projects.value[selectedItem.value].pname != null) {
+            publisher.value = await (await fetch(
+                SERVER + "/publisher/pname=" + projects.value[selectedItem.value].pname
+            )).json()
+        } else {
+            publisher.value = []
+        }
+
+        tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
+        members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
+        logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
+        //@ts-ignore
+        shownLogs.value = logs.value.map(x => x)
+
+        announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
+        references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
+        //@ts-ignore
+        shownReferences.value = references.value.map(x => x)
+
+        journals.value = await (await fetch(SERVER + "/publishers")).json()
+        suggestedMembers.value = await (await fetch(SERVER + '/suggested_members/uid='+userStore.uid)).json()
+        suggestedMembers.value = suggestedMembers.value.filter(x => !members.value.map(x => x.uid).includes(x.uid))
+
+        lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
     }
-
-    tasks.value = await (await fetch(SERVER + "/tasks/pid=" + projects.value[selectedItem.value].pid)).json()
-    members.value = await (await fetch(SERVER + "/members/pid=" + projects.value[selectedItem.value].pid)).json()
-    logs.value = await (await fetch(SERVER + "/logs/pid=" + projects.value[selectedItem.value].pid)).json()
-    //@ts-ignore
-    shownLogs.value = logs.value.map(x => x)
-
-    announcements.value = await (await fetch(SERVER + "/announcements/pid=" + projects.value[selectedItem.value].pid)).json()
-    references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
-    //@ts-ignore
-    shownReferences.value = references.value.map(x => x)
-
-    journals.value = await (await fetch(SERVER + "/publishers")).json()
-    suggestedMembers.value = await (await fetch(SERVER + '/suggested_members/uid='+userStore.uid)).json()
-
-    lead.value = members.value[members.value.map(x => x.uid).indexOf(userStore.uid)].role === "lead"
 }
 
 const loadProjectData = async function() {
@@ -952,10 +974,17 @@ function formatDate(date: Date) {
 const deleteTask = async function(index: number) {
     await fetch(SERVER + "/delete_task/pid="+projects.value[selectedItem.value].pid
         +"&tnumber="+tasks.value[index].tnumber)
-    delete tasks.value[index]
+    tasks.value.splice(index, 1)
+    recomputeProgress(-1)
 }
 
 const editTask = async function(index: number) {
+    if (title.value.length === 0 || text.value.length === 0) {
+        errorDialog.value = true
+        error.value = "Title or text are empty"
+        return
+    }
+
     let dateString = formatDate(date.value)
     let b64description = btoa(text.value)
     if (index === -1) {
@@ -966,6 +995,7 @@ const editTask = async function(index: number) {
             + "&description="+b64description
         )
         await getTasks()
+        recomputeProgress(-1)
     } else {
         await fetch(
             SERVER + "/edit_task_details/pid="+projects.value[selectedItem.value].pid
@@ -979,6 +1009,12 @@ const editTask = async function(index: number) {
 }
 
 const editAnnouncement = async function(index: number) {
+    if (text.value.length === 0) {
+        errorDialog.value = true
+        error.value = "Text is empty"
+        return
+    }
+
     let b64announcement = btoa(text.value)
     if (index === -1) {
         await fetch(
@@ -1007,6 +1043,12 @@ const deleteAnnouncement = async function(index: number) {
 }
 
 const addLog = async function() {
+    if (title.value.length === 0 || text.value.length === 0) {
+        errorDialog.value = true
+        error.value = "Title or text are empty"
+        return
+    }
+
     logs.value[0].title = title.value
     logs.value[0].text = text.value
 
@@ -1019,6 +1061,12 @@ const addLog = async function() {
 
 const editLog = async function(index: number) {
     if (editing.value) {
+        if (title.value.length === 0 || text.value.length === 0) {
+            errorDialog.value = true
+            error.value = "Title or text are empty"
+            return
+        }
+
         logs.value[index].title = title.value
         logs.value[index].text = text.value
 
@@ -1034,6 +1082,9 @@ const editLog = async function(index: number) {
 }
 
 const deleteLog = async function(index: number) {
+    if (logs.value.length === 1)
+        logbookOpen.value = false
+
     await fetch(
         SERVER + "/delete_log/pid="+projects.value[selectedItem.value].pid+"&lnumber="+logs.value[index].lnumber
     )
@@ -1041,6 +1092,8 @@ const deleteLog = async function(index: number) {
     logSearchTerm.value = ""
     // ts-ignore
     shownLogs.value = logs.value.map(x => x)
+
+    logbookPage.value = Math.min(logbookPage.value,logs.value.length)
 }
 
 const updatePublisher = async function() {
@@ -1060,12 +1113,19 @@ const addReference = async function() {
     let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replaceAll("/", "$2F")+
         "\"&pid="+projects.value[selectedItem.value].pid)).json()
     if (data.status == 0) {
-        error.value = data.error
+        if (data.error.includes("Duplicate")) {
+            error.value = "This reference is already in the database."
+        } else {
+            error.value = data.error
+        }
+
         errorDialog.value = true
     }
 
     // Reload the references
     references.value = await (await fetch(SERVER + "/references/pid=" + projects.value[selectedItem.value].pid)).json()
+    //@ts-ignore
+    shownReferences.value = references.value.map(x => x)
 }
 
 const deleteReference = async function(item: object) {
@@ -1073,15 +1133,33 @@ const deleteReference = async function(item: object) {
     await fetch(SERVER + "/delete_reference/doi=\""+item.doi.replaceAll("/", "$2F")+"&pid="+projects.value[selectedItem.value].pid)
     //@ts-ignore
     references.value = references.value.filter(i => i !== item)
+    //@ts-ignore
+    shownReferences.value = references.value.map(x => x)
 }
 
 const editTitle = async function() {
+    if (editedTitle.value.length === 0) {
+        editedTitle.value = true
+        error.value = "Title is empty"
+        return
+    }
+
     projects.value[selectedItem.value].name = editedTitle.value
     await fetch(SERVER + "/edit_title/pid="+projects.value[selectedItem.value].pid+"&title="+editedTitle.value)
 }
 
 const createProject = async function() {
+    if (editedTitle.value.length === 0) {
+        editedTitle.value = true
+        error.value = "Title is empty"
+        return
+    }
+
     projects.value.push(await (await fetch(SERVER + "/new_project/title="+editedTitle.value+"&uid="+userStore.uid)).json())
+    selectedItem.value = projects.value.length - 1
+    if (projects.value.length === 1) {
+        loadEverything()
+    }
 }
 
 const deleteProject = async function() {

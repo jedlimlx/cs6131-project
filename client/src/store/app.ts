@@ -18,7 +18,8 @@ export const useUserStore = defineStore('user', {
         //@ts-ignore
         email: useLocalStorage("email", ""),
         //@ts-ignore
-        creatingNewAccount: false
+        creatingNewAccount: false,
+        selectedItem: useLocalStorage("index", 0)
     }),
     actions: {
         async login(username: string, password: string): Promise<boolean> {

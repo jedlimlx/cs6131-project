@@ -237,8 +237,7 @@ def get_reference(doi):
             elif "wolfram" in doi:
                 json["icon"] = "https://www.wolfram.com/common/framework/img/spikey.en.png"
             else:
-                lst = re.findall(r'<link rel="icon" .*? href="(.*?)" .*?>', requests.get(doi).text)
-                print(lst)
+                lst = re.findall(r'<link rel="icon" .*? href="(.*?)">', requests.get(doi).text)
                 if len(lst) == 0: json["icon"] = None
                 else: json["icon"] = doi + ("" if doi[-1] == "/" else "/") + lst[0][1:]
 
@@ -511,7 +510,8 @@ def get_projects(uid, order):
         cursor.execute(f"""
         SELECT p.pid, p.name, p.pname, p.progress 
         FROM worksOn w, project p 
-        WHERE uid=%s AND p.pid=w.pid """, (uid,))
+        WHERE uid=%s AND p.pid=w.pid
+        ORDER BY p.pid""", (uid,))
 
     data = cursor.fetchall()
 
@@ -657,6 +657,29 @@ def suggested_members(uid):
     ])
 
 
+@app.route('/all_possible_members')
+def all_possible_members():
+    cursor = mysql.connection.cursor()
+
+    # Executing SQL Statements
+    cursor.execute(f"""SELECT uid, username, firstname FROM user """)
+    data = cursor.fetchall()
+
+    # Saving the actions performed on the DB
+    mysql.connection.commit()
+
+    # Closing the cursor
+    cursor.close()
+
+    return jsonify([
+        {
+            "uid": x[0],
+            "username": x[1],
+            "firstname": x[2]
+        } for x in data
+    ])
+
+
 # Task Management
 @app.route('/tasks/pid=<int:pid>')
 def get_tasks(pid):
@@ -680,6 +703,42 @@ def get_tasks(pid):
         SELECT u.uid, u.username
         FROM assigned a, user u 
         WHERE pid=%s AND tnumber=%s AND a.uid=u.uid """, (pid, i[1],))
+        assigned = cursor.fetchall()
+
+        task["assigned"] = [{"uid": x[0], "username": x[1]} for x in assigned]
+        tasks.append(task)
+
+    mysql.connection.commit()
+    cursor.close()
+
+    return jsonify(tasks)
+
+
+@app.route('/get_outstanding_tasks/uid=<int:uid>')
+def get_outstanding_tasks(uid):
+    cursor = mysql.connection.cursor()
+
+    cursor.execute(f"""SELECT t.pid, t.tnumber, t.title, t.description, t.deadline, t.completed, p.name
+    FROM task t, assigned a, project p
+    WHERE t.tnumber = a.tnumber AND t.pid = a.pid AND t.pid = p.pid AND uid=%s AND t.completed = 0 """, (uid,))
+    data = cursor.fetchall()
+
+    tasks = []
+    for i in data:
+        task = {
+            "pid": i[0],
+            "tnumber": i[1],
+            "title": i[2],
+            "description": i[3],
+            "deadline": i[4],
+            "completed": True if i[5] == 1 else False,
+            "projectName": i[6]
+        }
+
+        cursor.execute(f"""
+        SELECT u.uid, u.username
+        FROM assigned a, user u
+        WHERE pid=%s AND tnumber=%s AND a.uid=u.uid """, (i[0], i[1],))
         assigned = cursor.fetchall()
 
         task["assigned"] = [{"uid": x[0], "username": x[1]} for x in assigned]
@@ -817,11 +876,11 @@ def num_tasks(uid):
     cursor.execute(f"""SELECT t1.num, t2.num FROM (
         SELECT COUNT(*) num
         FROM assigned a, task t 
-        WHERE a.tnumber = t.tnumber AND a.uid = %s AND t.completed = 0 AND t.deadline < NOW()
+        WHERE a.tnumber = t.tnumber AND a.pid = t.pid AND a.uid = %s AND t.completed = 0
     ) t1, (
         SELECT COUNT(*) num
         FROM assigned a, task t 
-        WHERE a.tnumber = t.tnumber AND a.uid = %s AND t.completed = 0 AND t.deadline >= NOW()  
+        WHERE a.tnumber = t.tnumber AND a.pid = t.pid AND a.uid = %s AND t.completed = 0 AND t.deadline < NOW()
     ) t2""", (uid,uid,))
     data = cursor.fetchone()
 
@@ -943,8 +1002,12 @@ def add_log(pid, uid, title, text):
 
     cursor = mysql.connection.cursor()
 
-    cursor.execute(f"""INSERT INTO log
-    SELECT %s, MAX(lnumber)+1, %s, %s, UTC_TIMESTAMP(), %s FROM log""", (pid, uid, title, text))
+    cursor.execute(f"""SELECT MAX(lnumber)+1 FROM log WHERE pid=%s""", (pid,)) + 1
+
+    lnumber = cursor.fetchone()[0]
+    lnumber = 0 if lnumber is None else lnumber
+    cursor.execute(f"""INSERT INTO log VALUES (%s, %s, %s, %s, UTC_TIMESTAMP(), %s)""",
+                   (pid, lnumber, uid, title, text,))
 
     mysql.connection.commit()
     cursor.close()

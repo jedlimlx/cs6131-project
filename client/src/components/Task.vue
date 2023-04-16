@@ -1,13 +1,22 @@
 <template>
     <v-card
-        width="250"
+        :width="profile ? 350 : 250"
         :color="task.completed ? 'green-lighten-5' : (new Date() < new Date(task.deadline) ? 'orange-lighten-5' : 'red-lighten-5')"
         class="text-wrap"
     >
         <template v-slot:append>
+            <v-btn
+                @click="$emit('jump')"
+                icon="mdi-link-variant"
+                color="transparent"
+                elevation="0"
+                v-if="profile"
+                class="mt-1"
+            ></v-btn>
             <v-checkbox
                 color="green"
                 v-model="task.completed"
+                v-if="!profile"
                 @click="updateCompleted(); $emit('completenessChanged')"
             ></v-checkbox>
         </template>
@@ -95,8 +104,8 @@ import 'vue3-markdown/dist/style.css'
 
 export default {
     components: { VMarkdownView },
-    props: ["task", "members", "lead"],
-    emits: ["showDialog", "completenessChanged", "delete"],
+    props: ["task", "members", "lead", "profile"],
+    emits: ["showDialog", "completenessChanged", "delete", "jump"],
     data() {
         return {
             assigned: []

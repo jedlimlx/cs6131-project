@@ -198,7 +198,12 @@ const addReference = async function() {
     let data = await (await fetch(SERVER + "/add_reference/doi=\""+refDialog.value.doi.replaceAll("/", "$2F")+
         "\"&uid="+userStore.uid+"&read=0")).json()
     if (data.status == 0) {
-        error.value = data.error
+        if (data.error.includes("Duplicate")) {
+            error.value = "This reference is already in the database."
+        } else {
+            error.value = data.error
+        }
+        
         errorDialog.value = true
     }
 

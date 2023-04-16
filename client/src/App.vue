@@ -362,7 +362,7 @@ const newAccount = async function() {
         return
     }
 
-    if (password.value.length <= 8) {
+    if (password.value.length < 8) {
         newAccountErrorMessage.value = "Your password must be at least 8 characters long!"
         newAccountError.value = true
         return
